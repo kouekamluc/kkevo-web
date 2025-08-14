@@ -1,0 +1,37 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "==5.0.0"
+djangorestframework = "==3.14.0"
+django-cors-headers = "==4.3.1"
+psycopg2-binary = "==2.9.9"
+pillow = "==10.1.0"
+gunicorn = "==21.2.0"
+whitenoise = "==6.6.0"
+dj-database-url = "==2.1.0"
+python-decouple = "==3.8"
+django-filter = "==23.5"
+django-extensions = "==3.2.3"
+watchdog = "==3.0.0"
+watchmedo = "==3.0.1"
+
+[dev-packages]
+pytest = "==7.4.3"
+pytest-django = "==4.7.0"
+black = "==23.11.0"
+flake8 = "==6.1.0"
+isort = "==5.12.0"
+pre-commit = "==3.6.0"
+
+[requires]
+python_version = "3.12"
+
+[scripts]
+dev = "python manage.py runserver 0.0.0.0:8000"
+test = "pytest"
+lint = "flake8 ."
+format = "black ."
+sort = "isort ."
