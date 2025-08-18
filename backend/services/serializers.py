@@ -2,7 +2,7 @@
 Serializers for services app.
 """
 from rest_framework import serializers
-from .models import Service
+from .models import Service, CompanyStats
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -32,3 +32,18 @@ class ServiceListSerializer(serializers.ModelSerializer):
             'category', 'order', 'is_active'
         ]
         read_only_fields = ['id', 'slug', 'order', 'is_active']
+
+
+class CompanyStatsSerializer(serializers.ModelSerializer):
+    """Serializer for CompanyStats model."""
+    
+    display_value = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = CompanyStats
+        fields = [
+            'id', 'name', 'value', 'suffix', 'label', 'description',
+            'icon_name', 'color_scheme', 'order', 'is_active',
+            'created_at', 'updated_at', 'display_value'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

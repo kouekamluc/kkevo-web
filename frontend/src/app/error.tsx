@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, Home, RefreshCw, ArrowRight } from 'lucide-react';
 import { AnimatedButton } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -12,7 +13,15 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function Error({ error, reset }: ErrorProps) {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const router = useRouter();
+  
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Application error:', error);
@@ -89,7 +98,7 @@ export default function Error({ error, reset }: ErrorProps) {
               <AnimatedButton
                 variant="outline"
                 size="lg"
-                onClick={() => window.location.href = '/'}
+                onClick={() => router.push('/')}
               >
                 <Home className="w-5 h-5 mr-2" />
                 Back to Home

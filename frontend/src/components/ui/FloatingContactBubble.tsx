@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Mail, Phone, MapPin } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useStore';
 import { useIsReducedMotion } from '@/hooks';
 
@@ -32,6 +33,7 @@ export default function FloatingContactBubble() {
   const [isVisible, setIsVisible] = useState(false);
   const { openContactForm } = useAppStore();
   const isReducedMotion = useIsReducedMotion();
+  const router = useRouter();
 
   useEffect(() => {
     // Show bubble after 3 seconds
@@ -49,7 +51,7 @@ export default function FloatingContactBubble() {
   const handleContactForm = () => {
     setIsOpen(false);
     openContactForm();
-    window.location.href = '/contact';
+    router.push('/contact');
   };
 
   if (!isVisible) return null;
@@ -139,7 +141,7 @@ export default function FloatingContactBubble() {
       </motion.button>
 
       {/* Pulse Effect */}
-      {!isOpen && (
+      {!isOpen && !isReducedMotion && (
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}

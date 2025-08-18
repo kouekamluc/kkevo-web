@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Target, Eye, Award, TrendingUp, Globe, Zap, Heart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Star, Users, Award, CheckCircle, Globe, Rocket, Zap } from 'lucide-react';
 import { teamApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
-import { AnimatedCard } from '@/components/ui';
+import { AnimatedButton, AnimatedCard } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 interface TeamMember {
@@ -76,6 +77,7 @@ const techStack = [
 export default function AboutPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -121,7 +123,7 @@ export default function AboutPage() {
               <FadeInSection>
                 <div className="text-center lg:text-left">
                   <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-6">
-                    <Target className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                    <ArrowRight className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
                     Our Mission
@@ -136,7 +138,7 @@ export default function AboutPage() {
               <FadeInSection delay={0.2}>
                 <div className="text-center lg:text-left">
                   <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-6">
-                    <Eye className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                    <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
                     Our Vision
@@ -371,7 +373,7 @@ export default function AboutPage() {
                 Let's discuss how our team can help bring your vision to life.
               </p>
               <button
-                onClick={() => window.location.href = '/contact'}
+                onClick={() => router.push('/contact')}
                 className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors duration-200"
               >
                 Get in Touch

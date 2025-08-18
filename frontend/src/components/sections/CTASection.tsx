@@ -1,11 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Phone, Mail, MessageCircle, Calendar, ArrowRight, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, CheckCircle, Star, Users, Zap, Award, Phone, Mail, MessageCircle, Calendar } from 'lucide-react';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, AnimatedCard } from '@/components/ui';
 
 const CTASection = () => {
+  const router = useRouter();
+  
   const contactMethods = [
     {
       icon: Phone,
@@ -76,9 +79,9 @@ const CTASection = () => {
           <FadeInSection delay={0.2}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <AnimatedButton
-                variant="secondary"
+                variant="primary"
                 size="lg"
-                onClick={() => window.location.href = '/contact'}
+                onClick={() => router.push('/contact')}
                 className="group"
               >
                 Get Free Consultation
@@ -86,10 +89,10 @@ const CTASection = () => {
               </AnimatedButton>
               
               <AnimatedButton
-                variant="ghost"
+                variant="outline"
                 size="lg"
-                className="text-white border-white hover:bg-white hover:text-indigo-600"
-                onClick={() => window.location.href = '/services'}
+                onClick={() => router.push('/services')}
+                className="group"
               >
                 Explore Our Services
               </AnimatedButton>

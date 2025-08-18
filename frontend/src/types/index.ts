@@ -20,6 +20,7 @@ export interface Service {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  reading_time?: number;
 }
 
 export interface TeamMember {
@@ -55,13 +56,20 @@ export interface BlogPost {
   summary: string;
   body: string;
   hero_image?: string;
-  author: TeamMember;
+  hero_image_url?: string;
+  author: {
+    id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+  };
   tags: string[];
-  status: 'draft' | 'published';
-  published_at?: string;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  reading_time: number;
 }
 
 export interface ContactSubmission {
@@ -75,6 +83,48 @@ export interface ContactSubmission {
   is_read: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CompanyStats {
+  id: string;
+  name: string;
+  value: number;
+  suffix: string;
+  label: string;
+  description: string;
+  icon_name: string;
+  color_scheme: string;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  display_value: string;
+}
+
+export interface Portfolio {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  long_description: string;
+  category: string;
+  client: string;
+  year: string;
+  hero_image?: string;
+  gallery_images: string[];
+  technologies: string[];
+  duration: string;
+  team_size: string;
+  results: Record<string, string>;
+  live_url?: string;
+  github_url?: string;
+  case_study_url?: string;
+  is_featured: boolean;
+  order: number;
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at: string;
+  reading_time: number;
 }
 
 // Form Types

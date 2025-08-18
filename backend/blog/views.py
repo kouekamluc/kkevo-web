@@ -4,6 +4,8 @@ Views for blog app.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from .models import BlogPost
 from .serializers import BlogPostSerializer, BlogPostListSerializer, BlogPostDetailSerializer
 from rest_framework.decorators import action
@@ -48,6 +50,12 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(is_featured=featured_bool)
         
         return queryset
+    
+    def retrieve(self, request, slug=None):
+        """Retrieve a blog post by slug."""
+        blog_post = get_object_or_404(BlogPost, slug=slug, status='published')
+        serializer = self.get_serializer(blog_post)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def featured(self, request):

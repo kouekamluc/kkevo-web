@@ -9,7 +9,7 @@ dev: ## Start all services in development mode
 	docker-compose up -d
 	@echo "🚀 Development environment started!"
 	@echo "📱 Frontend: http://localhost:3000"
-	@echo "🔧 Backend: http://localhost:8000"
+	@echo "🔧 Backend: http://localhost:8081"
 	@echo "🗄️  Database: localhost:5432"
 
 build: ## Build all Docker images

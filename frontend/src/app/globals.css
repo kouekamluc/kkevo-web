@@ -6,6 +6,10 @@
   :root {
     --font-inter: 'Inter', system-ui, sans-serif;
     --font-jetbrains-mono: 'JetBrains Mono', monospace;
+    
+    /* Toast variables */
+    --toast-bg: theme(colors.white);
+    --toast-color: theme(colors.gray.900);
   }
 
   * {
@@ -165,6 +169,12 @@
 
   .transform-3d {
     transform-style: preserve-3d;
+  }
+  
+  /* Dark mode toast variables */
+  .dark {
+    --toast-bg: theme(colors.gray.800);
+    --toast-color: theme(colors.gray.100);
   }
 }
 

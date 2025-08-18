@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Mail, Phone, MapPin, Send, CheckCircle, ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { contactApi } from '@/lib/api';
 import { FadeInSection } from '@/components/animations';
-import { AnimatedButton } from '@/components/ui';
+import { AnimatedButton, AnimatedCard } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -65,6 +66,7 @@ const subjectLabels = {
 
 
 export default function ContactPage() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   
@@ -120,7 +122,7 @@ export default function ContactPage() {
                   <AnimatedButton
                     variant="outline"
                     size="lg"
-                    onClick={() => window.location.href = '/'}
+                    onClick={() => router.push('/')}
                   >
                     Back to Home
                   </AnimatedButton>

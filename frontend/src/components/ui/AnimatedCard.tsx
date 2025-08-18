@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ReactNode, useRef } from 'react';
+import { ReactNode, useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
 import { cn } from '@/lib/utils';
 
 interface AnimatedCardProps {
@@ -13,6 +14,8 @@ interface AnimatedCardProps {
   shadow?: boolean;
   border?: boolean;
   onClick?: () => void;
+  gsapTilt?: boolean;
+  magnetic?: boolean;
 }
 
 const AnimatedCard = ({
@@ -24,8 +27,11 @@ const AnimatedCard = ({
   shadow = true,
   border = false,
   onClick,
+  gsapTilt = false,
+  magnetic = false,
 }: AnimatedCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const gsapRef = useRef<HTMLDivElement>(null);
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -37,6 +43,118 @@ const AnimatedCard = ({
   const springRotateX = useSpring(rotateX, springConfig);
   const springRotateY = useSpring(rotateY, springConfig);
   const springScale = useSpring(1, springConfig);
+
+  // GSAP tilt animation
+  useEffect(() => {
+    if (!gsapTilt || !gsapRef.current) return;
+
+    const card = gsapRef.current;
+    let isHovered = false;
+
+    const handleMouseEnter = () => {
+      isHovered = true;
+      gsap.to(card, {
+        scale: 1.05,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    };
+
+    const handleMouseLeave = () => {
+      isHovered = false;
+      gsap.to(card, {
+        scale: 1,
+        rotationX: 0,
+        rotationY: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isHovered) return;
+
+      const rect = card.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const mouseX = e.clientX - centerX;
+      const mouseY = e.clientY - centerY;
+      
+      const rotateX = (mouseY / (rect.height / 2)) * -15;
+      const rotateY = (mouseX / (rect.width / 2)) * 15;
+
+      gsap.to(card, {
+        rotationX: rotateX,
+        rotationY: rotateY,
+        duration: 0.1,
+        ease: 'power2.out',
+      });
+    };
+
+    card.addEventListener('mouseenter', handleMouseEnter);
+    card.addEventListener('mouseleave', handleMouseLeave);
+    card.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      card.removeEventListener('mouseenter', handleMouseEnter);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+      card.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [gsapTilt]);
+
+  // Magnetic effect
+  useEffect(() => {
+    if (!magnetic || !cardRef.current) return;
+
+    const card = cardRef.current;
+    let isHovered = false;
+
+    const handleMouseEnter = () => {
+      isHovered = true;
+    };
+
+    const handleMouseLeave = () => {
+      isHovered = false;
+      gsap.to(card, {
+        x: 0,
+        y: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isHovered) return;
+
+      const rect = card.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const mouseX = e.clientX - centerX;
+      const mouseY = e.clientY - centerY;
+      
+      const magneticX = mouseX * 0.1;
+      const magneticY = mouseY * 0.1;
+
+      gsap.to(card, {
+        x: magneticX,
+        y: magneticY,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    };
+
+    card.addEventListener('mouseenter', handleMouseEnter);
+    card.addEventListener('mouseleave', handleMouseLeave);
+    card.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      card.removeEventListener('mouseenter', handleMouseEnter);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+      card.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [magnetic]);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!tilt || !cardRef.current) return;
@@ -69,6 +187,32 @@ const AnimatedCard = ({
     className
   );
 
+  // Use GSAP tilt if enabled
+  if (gsapTilt) {
+    return (
+      <div
+        ref={gsapRef}
+        className={baseClasses}
+        style={{
+          transformStyle: 'preserve-3d',
+          perspective: '1000px',
+        }}
+        onClick={onClick}
+      >
+        <div className="relative z-10">
+          {children}
+        </div>
+        
+        {/* Enhanced gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 rounded-xl pointer-events-none" />
+        
+        {/* Subtle border glow on hover */}
+        <div className="absolute inset-0 rounded-xl border border-transparent hover:border-indigo-200/20 dark:hover:border-indigo-700/20 transition-colors duration-300" />
+      </div>
+    );
+  }
+
+  // Use Framer Motion tilt
   return (
     <motion.div
       ref={cardRef}
@@ -94,9 +238,17 @@ const AnimatedCard = ({
         {children}
       </div>
       
-      {/* Subtle gradient overlay for depth */}
+      {/* Enhanced gradient overlay for depth */}
       {tilt && (
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 rounded-xl pointer-events-none" />
+      )}
+      
+      {/* Subtle border glow on hover */}
+      <div className="absolute inset-0 rounded-xl border border-transparent hover:border-indigo-200/20 dark:hover:border-indigo-700/20 transition-colors duration-300" />
+      
+      {/* Enhanced shadow effect */}
+      {shadow && (
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/5 via-transparent to-violet-500/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       )}
     </motion.div>
   );

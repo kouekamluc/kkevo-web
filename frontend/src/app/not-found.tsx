@@ -1,12 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Home, ArrowLeft, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Home, ArrowRight, AlertTriangle } from 'lucide-react';
 import { AnimatedButton } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
 export default function NotFound() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -77,7 +80,7 @@ export default function NotFound() {
               <AnimatedButton
                 variant="primary"
                 size="lg"
-                onClick={() => window.location.href = '/'}
+                onClick={() => router.push('/')}
               >
                 <Home className="w-5 h-5 mr-2" />
                 Back to Home
@@ -86,9 +89,9 @@ export default function NotFound() {
               <AnimatedButton
                 variant="outline"
                 size="lg"
-                onClick={() => window.history.back()}
+                onClick={() => router.back()}
               >
-                <ArrowLeft className="w-5 h-5 mr-2" />
+                <ArrowRight className="w-5 h-5 mr-2" />
                 Go Back
               </AnimatedButton>
             </motion.div>

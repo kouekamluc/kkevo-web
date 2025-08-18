@@ -4,61 +4,62 @@ import HeroSection from '@/components/sections/HeroSection';
 import ServicesMarquee from '@/components/sections/ServicesMarquee';
 import CaseStudyCarousel from '@/components/sections/CaseStudyCarousel';
 import TestimonialSlider from '@/components/sections/TestimonialSlider';
+import TeamPreview from '@/components/sections/TeamPreview';
+import BlogPreview from '@/components/sections/BlogPreview';
 import StatsSection from '@/components/sections/StatsSection';
 import CTASection from '@/components/sections/CTASection';
 import Footer from '@/components/layout/Footer';
 
-export const metadata: Metadata = {
-  title: 'KKEVO - Software Development Company | We Build Software That Moves Markets',
-  description: 'KKEVO is a leading software development company specializing in web development, mobile apps, cloud solutions, and digital transformation. We deliver cutting-edge software that drives business growth.',
-  keywords: 'software development, web development, mobile apps, cloud solutions, digital transformation, KKEVO, custom software',
-  openGraph: {
-    title: 'KKEVO - Software Development Company',
-    description: 'We Build Software That Moves Markets',
-    type: 'website',
-    url: 'https://kkevo.com',
-    siteName: 'KKEVO',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'KKEVO - Software Development Company',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'KKEVO - Software Development Company',
-    description: 'We Build Software That Moves Markets',
-    images: ['/og-image.jpg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-    yahoo: 'your-yahoo-verification-code',
-  },
-};
+import { Service, Testimonial, TeamMember, BlogPost } from '@/types';
+import { commonMeta } from './seo';
 
-export default function HomePage() {
+export const metadata: Metadata = commonMeta.home;
+
+async function getHomePageData() {
+  try {
+    // Fetch services, testimonials, team, and blog data in parallel
+    const [servicesResponse, testimonialsResponse, teamResponse, blogResponse] = await Promise.allSettled([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1'}/services/?limit=6&ordering=order`, { cache: 'no-store' }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1'}/testimonials/?limit=5&ordering=-created_at`, { cache: 'no-store' }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1'}/team/?limit=3&ordering=order`, { cache: 'no-store' }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1'}/blog/?limit=3&ordering=-published_at`, { cache: 'no-store' })
+    ]);
+
+    const services = servicesResponse.status === 'fulfilled' && servicesResponse.value.ok
+      ? await servicesResponse.value.json().then((data: { results?: Service[] }) => data.results || [])
+      : [];
+    
+    const testimonials = testimonialsResponse.status === 'fulfilled' && testimonialsResponse.value.ok
+      ? await testimonialsResponse.value.json().then((data: { results?: Testimonial[] }) => data.results || [])
+      : [];
+    
+    const teamMembers = teamResponse.status === 'fulfilled' && teamResponse.value.ok
+      ? await teamResponse.value.json().then((data: { results?: TeamMember[] }) => data.results || [])
+      : [];
+
+    const blogPosts = blogResponse.status === 'fulfilled' && blogResponse.value.ok
+      ? await blogResponse.value.json().then((data: { results?: BlogPost[] }) => data.results || [])
+      : [];
+
+    return { services, testimonials, teamMembers, blogPosts };
+  } catch (error) {
+    console.error('Error fetching home page data:', error);
+    return { services: [], testimonials: [], teamMembers: [], blogPosts: [] };
+  }
+}
+
+export default async function HomePage() {
+  const { services, testimonials, teamMembers, blogPosts } = await getHomePageData();
+
   return (
     <main className="min-h-screen">
       <Header />
       <HeroSection />
-      <ServicesMarquee />
+      <ServicesMarquee services={services} />
       <CaseStudyCarousel />
-      <TestimonialSlider />
+      <TestimonialSlider testimonials={testimonials} />
+      <TeamPreview teamMembers={teamMembers} />
+      <BlogPreview blogPosts={blogPosts} />
       <StatsSection />
       <CTASection />
       <Footer />

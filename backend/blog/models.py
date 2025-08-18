@@ -21,7 +21,7 @@ class BlogPost(models.Model):
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     summary = models.TextField(max_length=500)
     body = models.TextField()
-    hero_image = models.ImageField(upload_to='blog/hero_images/')
+    hero_image = models.ImageField(upload_to='blog/hero_images/', blank=True, null=True)
     author = models.ForeignKey(
         TeamMember, 
         on_delete=models.CASCADE, 
@@ -62,7 +62,20 @@ class BlogPost(models.Model):
     @property
     def author_role(self):
         """Return the author's role."""
-        return self.author.get_role_display() if self.author else ''
+        if self.author:
+            # Map role values to display names
+            role_map = {
+                'ceo': 'CEO & Founder',
+                'cto': 'CTO',
+                'developer': 'Lead Developer',
+                'designer': 'UI/UX Designer',
+                'devops': 'DevOps Engineer',
+                'pm': 'Product Manager',
+                'qa': 'QA Engineer',
+                'intern': 'Intern'
+            }
+            return role_map.get(self.author.role, self.author.role.title())
+        return ''
     
     @property
     def author_avatar(self):

@@ -3,31 +3,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Tag, Calendar, User, Clock, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { blogApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedCard } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useDebounce } from '@/hooks';
-
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  body: string;
-  hero_image: string;
-  author: {
-    name: string;
-    role: string;
-    avatar: string;
-  };
-  tags: string[];
-  status: string;
-  published_at: string;
-  is_featured: boolean;
-  reading_time: number;
-}
+import { BlogPost } from '@/types';
 
 const popularTags = [
   'Web Development', 'Mobile Apps', 'AI & ML', 'DevOps', 'Cloud Computing',
@@ -100,12 +83,20 @@ export default function BlogPage() {
     );
   };
 
+  // Helper function to safely get author name and role
+  const getAuthorInfo = (author: BlogPost['author']) => {
+    return { name: author.name, role: author.role };
+  };
+
   const loadMore = () => {
     setCurrentPage(prev => prev + 1);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return '';
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -194,77 +185,77 @@ export default function BlogPage() {
               <StaggerList>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredPosts.map((post, index) => (
-                    <motion.div
-                      key={post.id}
-                      className="group cursor-pointer"
-                      onClick={() => window.location.href = `/blog/${post.slug}`}
-                    >
-                      <AnimatedCard className="h-full group-hover:scale-105 transition-transform duration-300">
-                        <div className="relative">
-                          <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 group-hover:brightness-75 transition-all duration-300"></div>
-                          {post.is_featured && (
-                            <div className="absolute top-4 left-4 px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded">
-                              Featured
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="p-6">
-                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {formatDate(post.published_at)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {post.reading_time} min read
-                            </div>
-                          </div>
-                          
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                            {post.title}
-                          </h3>
-                          
-                          <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-                            {post.summary}
-                          </p>
-                          
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {post.tags.slice(0, 3).map((tag, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs rounded"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {post.tags.length > 3 && (
-                              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded">
-                                +{post.tags.length - 3} more
-                              </span>
+                    <Link href={`/blog/${post.slug}`} key={post.id}>
+                      <motion.div
+                        className="group cursor-pointer"
+                      >
+                        <AnimatedCard className="h-full group-hover:scale-105 transition-transform duration-300">
+                          <div className="relative">
+                            <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 group-hover:brightness-75 transition-all duration-300"></div>
+                            {post.is_featured && (
+                              <div className="absolute top-4 left-4 px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded">
+                                Featured
+                              </div>
                             )}
                           </div>
                           
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <div className="p-6">
+                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(post.published_at)}
                               </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {post.author.name}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {post.author.role}
-                                </p>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {post.reading_time} min read
                               </div>
                             </div>
                             
-                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all duration-200" />
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                              {post.title}
+                            </h3>
+                            
+                            <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                              {post.summary}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags.slice(0, 3).map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs rounded"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {post.tags.length > 3 && (
+                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded">
+                                  +{post.tags.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-indigo-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
+                                  <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {getAuthorInfo(post.author).name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {getAuthorInfo(post.author).role}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all duration-200" />
+                            </div>
                           </div>
-                        </div>
-                      </AnimatedCard>
-                    </motion.div>
+                        </AnimatedCard>
+                      </motion.div>
+                    </Link>
                   ))}
                 </div>
               </StaggerList>

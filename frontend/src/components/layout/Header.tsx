@@ -2,14 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Menu, X, Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@/lib/store';
+import type { Theme } from '@/types';
 import { AnimatedButton } from '@/components/ui';
+import { useAppStore } from '@/store/useStore';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,7 +34,7 @@ const Header = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
-  const themeIcons = {
+  const themeIcons: Record<Theme, typeof Sun> = {
     light: Sun,
     dark: Moon,
     system: Monitor,
@@ -56,23 +61,26 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <a href="/" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <Link href="/" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               KKEVO
-            </a>
+            </Link>
           </motion.div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
             {navigation.map((item) => (
-              <motion.a
+              <Link
                 key={item.name}
                 href={item.href}
                 className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
               >
-                {item.name}
-              </motion.a>
+                <motion.div
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {item.name}
+                </motion.div>
+              </Link>
             ))}
           </nav>
 
@@ -98,7 +106,7 @@ const Header = () => {
             <AnimatedButton
               variant="primary"
               size="sm"
-              onClick={() => window.location.href = '/contact'}
+              onClick={() => router.push('/contact')}
             >
               Get Started
             </AnimatedButton>
@@ -135,16 +143,19 @@ const Header = () => {
             <div className="px-4 py-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
               <nav className="space-y-4">
                 {navigation.map((item) => (
-                  <motion.a
+                  <Link
                     key={item.name}
                     href={item.href}
                     className="block text-lg font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    whileHover={{ x: 10 }}
-                    whileTap={{ scale: 0.95 }}
                   >
-                    {item.name}
-                  </motion.a>
+                    <motion.div
+                      whileHover={{ x: 10 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {item.name}
+                    </motion.div>
+                  </Link>
                 ))}
               </nav>
               
@@ -171,7 +182,7 @@ const Header = () => {
                   size="sm"
                   className="w-full mt-4"
                   onClick={() => {
-                    window.location.href = '/contact';
+                    router.push('/contact');
                     setMobileMenuOpen(false);
                   }}
                 >

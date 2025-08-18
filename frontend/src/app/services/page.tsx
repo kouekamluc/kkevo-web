@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, Grid3X3, List } from 'lucide-react';
+import { Filter, Grid3X3, List, Search } from 'lucide-react';
+import Link from 'next/link';
 import { servicesApi } from '@/lib/api';
 import { FadeInSection } from '@/components/animations';
 import { AnimatedCard } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useFilterSearchParams } from '@/hooks/useFilterSearchParams';
 
 interface Service {
   id: string;
@@ -17,6 +19,7 @@ interface Service {
   icon: string;
   category: string;
   features: string[];
+  order?: number;
 }
 
 const categories = [
@@ -28,21 +31,52 @@ const categories = [
   { id: 'consulting', name: 'Consulting', color: 'bg-teal-500' },
 ];
 
-
-
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const {
+    currentFilters,
+    setCategory,
+    setSearch,
+    setOrdering,
+    clearFilters,
+  } = useFilterSearchParams();
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
+        setIsLoading(true);
         const response = await servicesApi.getAll();
-        setServices(response.data.results || response.data);
-        setFilteredServices(response.data.results || response.data);
+        const allServices = response.data.results || response.data;
+        setServices(allServices);
+        
+        // Apply filters
+        let filtered = allServices;
+        
+        // Category filter
+        if (currentFilters.category && currentFilters.category !== 'all') {
+          filtered = filtered.filter((service: Service) => service.category === currentFilters.category);
+        }
+        
+        // Search filter
+        if (currentFilters.search) {
+          filtered = filtered.filter((service: Service) => 
+            service.title.toLowerCase().includes(currentFilters.search.toLowerCase()) ||
+            service.short_desc.toLowerCase().includes(currentFilters.search.toLowerCase())
+          );
+        }
+        
+        // Ordering
+        if (currentFilters.ordering === 'order') {
+          filtered.sort((a: Service, b: Service) => (a.order || 0) - (b.order || 0));
+        } else if (currentFilters.ordering === 'name') {
+          filtered.sort((a: Service, b: Service) => a.title.localeCompare(b.title));
+        }
+        
+        setFilteredServices(filtered);
       } catch (error) {
         console.error('Error fetching services:', error);
       } finally {
@@ -51,18 +85,19 @@ export default function ServicesPage() {
     };
 
     fetchServices();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCategory === 'all') {
-      setFilteredServices(services);
-    } else {
-      setFilteredServices(services.filter(service => service.category === selectedCategory));
-    }
-  }, [selectedCategory, services]);
+  }, [currentFilters.category, currentFilters.search, currentFilters.ordering]);
 
   const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
+    setCategory(category);
+  };
+
+  const handleSearchChange = (search: string) => {
+    setSearchTerm(search);
+    setSearch(search);
+  };
+
+  const handleOrderingChange = (ordering: string) => {
+    setOrdering(ordering);
   };
 
   if (isLoading) {
@@ -95,19 +130,19 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* Filters and View Toggle */}
+        {/* Filters and Search */}
         <section className="py-8 border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
               {/* Category Filters */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {categories.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => handleCategoryChange(category.id)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-indigo-600 text-white shadow-lg'
+                      currentFilters.category === category.id
+                        ? `${category.color} text-white shadow-lg scale-105`
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
@@ -116,28 +151,39 @@ export default function ServicesPage() {
                 ))}
               </div>
 
-              {/* View Toggle */}
-              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-white dark:bg-gray-700 text-indigo-600'
-                      : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
+              {/* Search and Ordering */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search services..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Ordering */}
+                <select
+                  value={currentFilters.ordering}
+                  onChange={(e) => handleOrderingChange(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <Grid3X3 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white dark:bg-gray-700 text-indigo-600'
-                      : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
+                  <option value="order">Sort by Order</option>
+                  <option value="name">Sort by Name</option>
+                </select>
+
+                {/* Clear Filters */}
+                {(currentFilters.category !== 'all' || currentFilters.search || currentFilters.ordering !== 'order') && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -148,103 +194,107 @@ export default function ServicesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {filteredServices.length === 0 ? (
               <div className="text-center py-16">
-                <h3 className="text-xl text-gray-600 dark:text-gray-400">
-                  No services found in this category.
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  No services found
                 </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Try adjusting your filters or search terms.
+                </p>
               </div>
             ) : (
-              <div className={
-                viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
-                  : 'space-y-6'
-              }>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredServices.map((service, index) => (
                   <motion.div
                     key={service.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                    className="group"
                   >
-                    <AnimatedCard
-                      className={`h-full cursor-pointer transition-all duration-300 hover:scale-105 ${
-                        viewMode === 'list' ? 'flex items-center gap-6' : ''
-                      }`}
-                      onClick={() => window.location.href = `/services/${service.slug}`}
-                    >
-                      {viewMode === 'list' ? (
-                        <>
-                          <div className="flex-shrink-0">
-                            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
-                              <span className="text-2xl">🚀</span>
+                    <AnimatedCard className="h-full">
+                      <div className="relative overflow-hidden rounded-t-xl">
+                        {/* Service Icon - Using live SVG from media */}
+                        <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-48 flex items-center justify-center">
+                          {service.icon ? (
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/media/icons/${service.icon}`}
+                              alt={service.title}
+                              className="w-24 h-24 object-contain"
+                              onError={(e) => {
+                                // Fallback to emoji if image fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          {/* Fallback emoji */}
+                          <span className={`text-6xl ${service.icon ? 'hidden' : ''}`}>
+                            {service.category === 'web' && '🌐'}
+                            {service.category === 'mobile' && '📱'}
+                            {service.category === 'devops' && '⚙️'}
+                            {service.category === 'ai' && '🤖'}
+                            {service.category === 'consulting' && '💼'}
+                          </span>
+                        </div>
+                        
+                        {/* Category Badge */}
+                        <div className="absolute top-4 left-4">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
+                            {service.category}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {service.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
+                          {service.short_desc}
+                        </p>
+                        
+                        {/* Features Preview */}
+                        {service.features && service.features.length > 0 && (
+                          <div className="mb-4">
+                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Key Features:
                             </div>
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                              {service.title}
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-300 mb-3">
-                              {service.short_desc}
-                            </p>
                             <div className="flex flex-wrap gap-2">
                               {service.features.slice(0, 3).map((feature, idx) => (
-                                <span
+                                <span 
                                   key={idx}
-                                  className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 rounded"
+                                  className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded"
                                 >
                                   {feature}
                                 </span>
                               ))}
+                              {service.features.length > 3 && (
+                                <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs rounded">
+                                  +{service.features.length - 3} more
+                                </span>
+                              )}
                             </div>
                           </div>
-                        </>
-                      ) : (
-                        <div className="text-center">
-                          <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-3xl">🚀</span>
-                          </div>
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                            {service.title}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-300 mb-4">
-                            {service.short_desc}
-                          </p>
-                          <div className="flex flex-wrap gap-2 justify-center">
-                            {service.features.slice(0, 2).map((feature, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 rounded"
-                              >
-                                {feature}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                        )}
+                        
+                        {/* Learn More Button */}
+                        <Link
+                          href={`/services/${service.slug}`}
+                          className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors"
+                        >
+                          Learn More
+                          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
                     </AnimatedCard>
                   </motion.div>
                 ))}
               </div>
             )}
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-indigo-600 to-purple-600">
-          <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <FadeInSection>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Ready to Get Started?
-              </h2>
-              <p className="text-xl text-indigo-100 mb-8">
-                Let's discuss how our services can help transform your business and drive growth.
-              </p>
-              <button
-                onClick={() => window.location.href = '/contact'}
-                className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors duration-200"
-              >
-                Start Your Project
-              </button>
-            </FadeInSection>
           </div>
         </section>
 

@@ -1,98 +1,137 @@
-import { DefaultSeoProps } from 'next-seo';
+import { Metadata } from 'next';
 
-export const defaultSEO: DefaultSeoProps = {
-  titleTemplate: '%s | KKEVO',
-  defaultTitle: 'KKEVO - Software Development Company | We Build Software That Moves Markets',
-  description: 'KKEVO is a leading software development company specializing in web development, mobile apps, cloud solutions, and digital transformation. We deliver cutting-edge software that drives business growth.',
-  canonical: 'https://kkevo.com',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://kkevo.com',
-    siteName: 'KKEVO',
-    title: 'KKEVO - Software Development Company',
-    description: 'We Build Software That Moves Markets',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'KKEVO - Software Development Company',
+export interface MetaData {
+  title: string;
+  description: string;
+  keywords?: string[];
+  image?: string;
+  url?: string;
+}
+
+export function generateMeta(data: MetaData): Metadata {
+  const {
+    title,
+    description,
+    keywords = [],
+    image = '/images/og-default.jpg',
+    url = '',
+  } = data;
+
+  const fullTitle = `${title} | KKEVO - Digital Innovation Agency`;
+  const fullUrl = url ? `https://kkevo.app${url}` : 'https://kkevo.app';
+
+  return {
+    title: fullTitle,
+    description,
+    keywords: keywords.join(', '),
+    authors: [{ name: 'KKEVO Team' }],
+    creator: 'KKEVO',
+    publisher: 'KKEVO',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-    ],
-  },
-  twitter: {
-    handle: '@kkevo',
-    site: '@kkevo',
-    cardType: 'summary_large_image',
-  },
-  additionalMetaTags: [
-    {
-      name: 'viewport',
-      content: 'width=device-width, initial-scale=1',
     },
-    {
-      name: 'theme-color',
-      content: '#1e1b4b',
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: fullUrl,
+      title: fullTitle,
+      description,
+      siteName: 'KKEVO',
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
-    {
-      name: 'msapplication-TileColor',
-      content: '#1e1b4b',
+    twitter: {
+      card: 'summary_large_image',
+      title: fullTitle,
+      description,
+      images: [image],
+      creator: '@kkevo',
+      site: '@kkevo',
     },
-  ],
-  additionalLinkTags: [
-    {
-      rel: 'icon',
-      href: '/favicon.ico',
+    alternates: {
+      canonical: fullUrl,
     },
-    {
-      rel: 'apple-touch-icon',
-      href: '/apple-touch-icon.png',
-      sizes: '180x180',
-    },
-    {
-      rel: 'icon',
-      href: '/icon-192x192.png',
-      sizes: '192x192',
-      type: 'image/png',
-    },
-    {
-      rel: 'icon',
-      href: '/icon-512x512.png',
-      sizes: '512x512',
-      type: 'image/png',
-    },
-    {
-      rel: 'manifest',
-      href: '/manifest.json',
-    },
-  ],
+    category: 'technology',
+  };
+}
+
+// Predefined meta data for common pages
+export const commonMeta = {
+  home: generateMeta({
+    title: 'Digital Innovation Agency',
+    description: 'KKEVO is a leading digital innovation agency specializing in web development, mobile apps, AI solutions, and digital transformation. We help businesses thrive in the digital age.',
+    keywords: ['digital agency', 'web development', 'mobile apps', 'AI solutions', 'digital transformation'],
+    url: '/',
+  }),
+  
+  about: generateMeta({
+    title: 'About Us',
+    description: 'Meet the KKEVO team of experts in technology, design, and innovation. Learn about our mission to transform businesses through cutting-edge digital solutions.',
+    keywords: ['about us', 'team', 'mission', 'values', 'expertise'],
+    url: '/about',
+  }),
+  
+  services: generateMeta({
+    title: 'Our Services',
+    description: 'Discover our comprehensive range of digital services including web development, mobile app development, AI & ML solutions, DevOps, and digital consulting.',
+    keywords: ['services', 'web development', 'mobile development', 'AI', 'DevOps', 'consulting'],
+    url: '/services',
+  }),
+  
+  work: generateMeta({
+    title: 'Our Work',
+    description: 'Explore our portfolio of successful digital projects and case studies. See how we\'ve helped businesses achieve their digital transformation goals.',
+    keywords: ['portfolio', 'case studies', 'projects', 'work examples', 'success stories'],
+    url: '/work',
+  }),
+  
+  blog: generateMeta({
+    title: 'Blog & Insights',
+    description: 'Stay updated with the latest trends in technology, digital innovation, and industry insights from our team of experts.',
+    keywords: ['blog', 'insights', 'technology trends', 'digital innovation', 'industry news'],
+    url: '/blog',
+  }),
+  
+  contact: generateMeta({
+    title: 'Get In Touch',
+    description: 'Ready to start your digital transformation journey? Contact KKEVO today for a free consultation and discover how we can help your business grow.',
+    keywords: ['contact', 'consultation', 'get quote', 'start project', 'free consultation'],
+    url: '/contact',
+  }),
 };
 
-// Page-specific SEO configurations
-export const pageSEO = {
-  home: {
-    title: 'We Build Software That Moves Markets',
-    description: 'Transform your business with cutting-edge software solutions. We deliver innovative, scalable applications that drive growth and create competitive advantages.',
-  },
-  services: {
-    title: 'Our Services',
-    description: 'Comprehensive software development services including web development, mobile apps, cloud solutions, and digital transformation.',
-  },
-  about: {
-    title: 'About KKEVO',
-    description: 'Meet our team of experts and learn about our mission to deliver exceptional software solutions that drive business success.',
-  },
-  work: {
-    title: 'Our Work',
-    description: 'Explore our portfolio of successful projects and case studies showcasing our expertise in software development.',
-  },
-  blog: {
-    title: 'Blog & Insights',
-    description: 'Stay updated with the latest trends in software development, technology insights, and industry best practices.',
-  },
-  contact: {
-    title: 'Contact Us',
-    description: 'Ready to start your project? Get in touch with our team to discuss how we can help bring your vision to life.',
-  },
-};
+// Helper for dynamic pages
+export function generateDynamicMeta(
+  type: 'service' | 'blog' | 'team',
+  data: { title: string; description: string; slug: string }
+): Metadata {
+  const { title, description, slug } = data;
+  
+  // Map type to correct URL pattern
+  const urlMap = {
+    service: `/services/${slug}`,
+    blog: `/blog/${slug}`,
+    team: `/team/${slug}`
+  };
+  
+  return generateMeta({
+    title,
+    description,
+    keywords: [type, title.toLowerCase(), 'kkevo'],
+    url: urlMap[type],
+  });
+}

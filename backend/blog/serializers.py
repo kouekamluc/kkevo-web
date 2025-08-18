@@ -33,12 +33,13 @@ class BlogPostListSerializer(serializers.ModelSerializer):
     author_name = serializers.ReadOnlyField()
     author_role = serializers.ReadOnlyField()
     reading_time = serializers.ReadOnlyField()
+    author = TeamMemberListSerializer(read_only=True)
     
     class Meta:
         model = BlogPost
         fields = [
             'id', 'title', 'slug', 'summary', 'hero_image_url', 
-            'author_name', 'author_role', 'tags', 'status', 
+            'author', 'author_name', 'author_role', 'tags', 'status', 
             'published_at', 'is_featured', 'reading_time'
         ]
         read_only_fields = ['id', 'slug', 'status', 'published_at', 'is_featured']
