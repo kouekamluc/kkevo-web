@@ -42,22 +42,13 @@ class PortfolioViewSet(viewsets.ReadOnlyModelViewSet):
             featured_bool = featured.lower() == 'true'
             queryset = queryset.filter(is_featured=featured_bool)
         
-        # Apply ordering BEFORE any slicing
+        # Apply ordering
         ordering = self.request.query_params.get('ordering', None)
         if ordering:
             queryset = queryset.order_by(ordering)
         else:
             # Use default ordering
             queryset = queryset.order_by('order', '-created_at')
-        
-        # Limit results if specified (apply AFTER ordering)
-        limit = self.request.query_params.get('limit', None)
-        if limit:
-            try:
-                limit = int(limit)
-                queryset = queryset[:limit]
-            except ValueError:
-                pass
         
         return queryset
     

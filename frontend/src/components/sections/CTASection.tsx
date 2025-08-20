@@ -5,25 +5,42 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, CheckCircle, Star, Users, Zap, Award, Phone, Mail, MessageCircle, Calendar } from 'lucide-react';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, AnimatedCard } from '@/components/ui';
+import { useCompanyConfig } from '@/components/providers/CompanyConfigProvider';
 
 const CTASection = () => {
   const router = useRouter();
+  const { config } = useCompanyConfig();
+  
+  // Use dynamic config or fallback to defaults
+  const headline = config?.cta_headline || 'Ready to Transform Your Business?';
+  const subtitle = config?.cta_subtitle || "Let's discuss how our innovative software solutions can drive growth, streamline operations, and create competitive advantages for your business.";
+  const benefits = config?.cta_benefits || [
+    'Free initial consultation and project assessment',
+    'Transparent pricing with no hidden fees',
+    'Dedicated project manager and development team',
+    'Regular progress updates and milestone reviews',
+    'Post-launch support and maintenance',
+    'Scalable solutions that grow with your business',
+  ];
+  const companyPhone = config?.company_phone || '+1 (555) 123-4567';
+  const companyEmail = config?.company_email || 'hello@kkevo.com';
+  const trustCompanies = config?.trust_companies || ['TechCorp', 'FinanceBank', 'DataFlow', 'InsightMetrics'];
   
   const contactMethods = [
     {
       icon: Phone,
       title: 'Call Us',
-      description: '+1 (555) 123-4567',
+      description: companyPhone,
       action: 'Call Now',
-      href: 'tel:+15551234567',
+      href: `tel:${companyPhone}`,
       color: 'from-blue-500 to-cyan-500',
     },
     {
       icon: Mail,
       title: 'Email Us',
-      description: 'hello@kkevo.com',
+      description: companyEmail,
       action: 'Send Email',
-      href: 'mailto:hello@kkevo.com',
+      href: `mailto:${companyEmail}`,
       color: 'from-green-500 to-emerald-500',
     },
     {
@@ -44,15 +61,6 @@ const CTASection = () => {
     },
   ];
 
-  const benefits = [
-    'Free initial consultation and project assessment',
-    'Transparent pricing with no hidden fees',
-    'Dedicated project manager and development team',
-    'Regular progress updates and milestone reviews',
-    'Post-launch support and maintenance',
-    'Scalable solutions that grow with your business',
-  ];
-
   return (
     <section className="py-20 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 relative overflow-hidden">
       {/* Background Elements */}
@@ -68,11 +76,10 @@ const CTASection = () => {
         <div className="text-center mb-16">
           <FadeInSection>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Ready to Transform Your Business?
+              {headline}
             </h2>
             <p className="text-xl md:text-2xl text-indigo-100 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Let's discuss how our innovative software solutions can drive growth, 
-              streamline operations, and create competitive advantages for your business.
+              {subtitle}
             </p>
           </FadeInSection>
 
@@ -164,10 +171,9 @@ const CTASection = () => {
               Trusted by leading companies worldwide
             </p>
             <div className="flex items-center justify-center space-x-8 opacity-60">
-              <div className="text-white text-lg font-semibold">TechCorp</div>
-              <div className="text-white text-lg font-semibold">FinanceBank</div>
-              <div className="text-white text-lg font-semibold">DataFlow</div>
-              <div className="text-white text-lg font-semibold">InsightMetrics</div>
+              {trustCompanies.map((company, index) => (
+                <div key={index} className="text-white text-lg font-semibold">{company}</div>
+              ))}
             </div>
           </div>
         </FadeInSection>

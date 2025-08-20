@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  ${posts.map(post => `
+  ${posts.map((post: any) => `
   <url>
     <loc>${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/blog/${post.slug}</loc>
     <lastmod>${new Date(post.updated_at || post.published_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>`).join('')}
-  ${Array.from(new Set(posts.map(post => post.category))).map(category => `
+  ${Array.from(new Set(posts.map((post: any) => post.category))).map((category: any) => `
   <url>
     <loc>${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/blog/category/${category}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>

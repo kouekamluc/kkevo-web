@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { blogApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
-import { AnimatedCard, AnimatedButton } from '@/components/ui';
+import { AnimatedCard, AnimatedButton, KkevoLogo } from '@/components/ui';
 import { BlogPost } from '@/types';
 
 interface BlogDetailPageProps {
@@ -139,11 +139,11 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-theme-secondary">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
-            <p className="text-white text-xl mt-4">Loading blog post...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-theme-accent mx-auto"></div>
+            <p className="text-theme-primary text-xl mt-4">Loading blog post...</p>
           </div>
         </div>
       </div>
@@ -153,26 +153,26 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   // Error state
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-theme-secondary">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="text-red-400 text-6xl mb-4">⚠️</div>
-            <h1 className="text-3xl font-bold text-white mb-4">
+            <h1 className="text-3xl font-bold text-theme-primary mb-4">
               {error || 'Blog post not found'}
             </h1>
-            <p className="text-gray-300 mb-8">
+            <p className="text-theme-secondary mb-8">
               The blog post you're looking for doesn't exist or couldn't be loaded.
             </p>
             <div className="space-x-4">
               <button
                 onClick={() => router.back()}
-                className="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-6 py-3 bg-theme-secondary text-theme-primary font-medium rounded-lg hover:bg-theme-tertiary transition-colors"
               >
                 Go Back
               </button>
               <Link
                 href="/blog"
-                className="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                className="inline-block px-6 py-3 bg-theme-accent text-white font-medium rounded-lg hover:bg-theme-accent/80 transition-colors"
               >
                 Browse All Posts
               </Link>
@@ -184,14 +184,26 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-theme-secondary">
       <div className="container mx-auto px-4 py-16">
+        {/* Company Logo */}
+        <FadeInSection>
+          <div className="text-center mb-12">
+            <KkevoLogo
+              width={120}
+              height={40}
+              variant="default"
+              className="drop-shadow-lg mx-auto"
+            />
+          </div>
+        </FadeInSection>
+
         {/* Back Button */}
         <FadeInSection>
           <div className="mb-8">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-theme-secondary hover:text-theme-primary transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
@@ -230,17 +242,17 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             {/* Post Header */}
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold text-theme-primary mb-6 leading-tight">
                   {post.title}
                 </h1>
-                <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                <p className="text-xl text-theme-secondary mb-8 max-w-3xl mx-auto">
                   {post.summary}
                 </p>
               </div>
 
               {/* Meta Information */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 p-6 bg-white/5 border border-white/20 rounded-xl">
-                <div className="flex items-center gap-6 text-gray-300">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 p-6 bg-theme-card border border-theme-border-primary rounded-xl">
+                <div className="flex items-center gap-6 text-theme-secondary">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(post.published_at)}</span>
@@ -262,7 +274,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       isLiked 
                         ? 'bg-red-500 text-white' 
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        : 'bg-theme-secondary text-theme-primary hover:bg-theme-tertiary'
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -274,7 +286,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       isBookmarked 
                         ? 'bg-indigo-500 text-white' 
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        : 'bg-theme-secondary text-theme-primary hover:bg-theme-tertiary'
                     }`}
                   >
                     <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -335,7 +347,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
               {/* Author Information */}
               {post.author && (
-                <div className="flex items-center gap-4 p-6 bg-white/5 border border-white/20 rounded-xl mb-8">
+                <div className="flex items-center gap-4 p-6 bg-theme-card border border-theme-border-primary rounded-xl mb-8">
                   {post.author.avatar ? (
                     <img
                       src={post.author.avatar}
@@ -350,13 +362,13 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                     </div>
                   )}
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-1">
+                    <h3 className="text-xl font-bold text-theme-primary mb-1">
                       {post.author.name}
                     </h3>
-                    <p className="text-gray-300 mb-2">
+                    <p className="text-theme-secondary mb-2">
                       {post.author.role}
                     </p>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-theme-tertiary text-sm">
                       Published on {formatDate(post.published_at)}
                     </p>
                   </div>
@@ -369,9 +381,9 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         {/* Blog Content */}
         <FadeInSection>
           <div className="max-w-4xl mx-auto mb-16">
-            <div className="prose prose-lg prose-invert max-w-none">
+            <div className="prose prose-lg max-w-none">
               <div 
-                className="text-gray-300 leading-relaxed text-lg"
+                className="text-theme-secondary leading-relaxed text-lg"
                 dangerouslySetInnerHTML={{ __html: post.body }}
               />
             </div>
@@ -387,7 +399,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                   <Link
                     key={tag}
                     href={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="px-4 py-2 bg-white/10 text-gray-300 hover:bg-white/20 rounded-lg transition-colors"
+                    className="px-4 py-2 bg-theme-secondary text-theme-primary hover:bg-theme-tertiary rounded-lg transition-colors"
                   >
                     #{tag}
                   </Link>
@@ -401,7 +413,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         {relatedPosts.length > 0 && (
           <FadeInSection>
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
+              <h2 className="text-3xl font-bold text-theme-primary text-center mb-12">
                 Related Posts
               </h2>
               <StaggerList>

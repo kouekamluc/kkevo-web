@@ -116,7 +116,7 @@ const ServicesMarquee = ({ services = [] }: ServicesMarqueeProps) => {
       tl1.kill();
       tl2.kill();
     };
-  }, [services.length]);
+  }, [services.length, displayServices.length]);
 
   return (
     <section className="py-20 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden relative">

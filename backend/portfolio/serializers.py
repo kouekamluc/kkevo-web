@@ -3,7 +3,6 @@ from .models import Portfolio
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
-    reading_time = serializers.ReadOnlyField()
     
     class Meta:
         model = Portfolio
@@ -12,7 +11,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
             'category', 'client', 'year', 'hero_image', 'gallery_images',
             'technologies', 'duration', 'team_size', 'results',
             'live_url', 'github_url', 'case_study_url', 'is_featured',
-            'order', 'status', 'created_at', 'updated_at', 'reading_time'
+            'order', 'status', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 

@@ -3,7 +3,7 @@ Admin configuration for services app.
 """
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Service, CompanyStats
+from .models import Service, CompanyStats, CompanyConfig
 
 
 @admin.register(Service)
@@ -91,3 +91,59 @@ class CompanyStatsAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset for admin."""
         return super().get_queryset(request).select_related()
+
+
+@admin.register(CompanyConfig)
+class CompanyConfigAdmin(admin.ModelAdmin):
+    """Admin configuration for CompanyConfig model."""
+    
+    list_display = ['is_active', 'company_email', 'company_phone', 'updated_at']
+    list_display_links = ['company_email']
+    list_editable = ['is_active']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Hero Section', {
+            'fields': ('hero_headline', 'hero_subtitle', 'hero_features'),
+            'description': 'Configure the main hero section content'
+        }),
+        ('CTA Section', {
+            'fields': ('cta_headline', 'cta_subtitle', 'cta_benefits'),
+            'description': 'Configure call-to-action section content'
+        }),
+        ('Contact Information', {
+            'fields': ('company_phone', 'company_email', 'company_address', 'live_chat_enabled'),
+            'description': 'Company contact details displayed throughout the site'
+        }),
+        ('Trust & Social', {
+            'fields': ('trust_companies', 'linkedin_url', 'twitter_url', 'github_url'),
+            'description': 'Trust indicators and social media links'
+        }),
+        ('Status', {
+            'fields': ('is_active',),
+            'description': 'Only one configuration should be active at a time'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """Ensure only one configuration is active at a time."""
+        if obj.is_active:
+            # Deactivate all other configurations
+            CompanyConfig.objects.exclude(id=obj.id).update(is_active=False)
+        super().save_model(request, obj, form, change)
+    
+    def has_add_permission(self, request):
+        """Only allow one configuration instance."""
+        if CompanyConfig.objects.exists():
+            return False
+        return super().has_add_permission(request)
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of the only configuration."""
+        if CompanyConfig.objects.count() <= 1:
+            return False
+        return super().has_delete_permission(request, obj)

@@ -6,8 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import Service, CompanyStats
-from .serializers import ServiceSerializer, ServiceListSerializer, CompanyStatsSerializer
+from .models import Service, CompanyStats, CompanyConfig
+from .serializers import ServiceSerializer, ServiceListSerializer, ServiceDetailSerializer, CompanyStatsSerializer, CompanyConfigSerializer
 
 
 class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -24,7 +24,7 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
         """Return appropriate serializer based on action."""
         if self.action == 'list':
             return ServiceListSerializer
-        return ServiceSerializer
+        return ServiceDetailSerializer
     
     def get_queryset(self):
         """Return filtered queryset."""
@@ -169,3 +169,48 @@ class CompanyStatsViewSet(viewsets.ReadOnlyModelViewSet):
                 }
             ]
             return Response(fallback_stats, status=200)
+
+
+class CompanyConfigViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for CompanyConfig model."""
+    
+    queryset = CompanyConfig.objects.filter(is_active=True)
+    serializer_class = CompanyConfigSerializer
+    
+    def list(self, request, *args, **kwargs):
+        """Return the active company configuration."""
+        config = CompanyConfig.get_active_config()
+        if config:
+            serializer = self.get_serializer(config)
+            return Response(serializer.data)
+        else:
+            # Return default configuration if none exists
+            default_config = {
+                'hero_headline': 'We Build Software That Moves Markets',
+                'hero_subtitle': 'Transform your business with cutting-edge software solutions. From web applications to AI-powered systems, we deliver results that drive growth.',
+                'hero_features': [
+                    'Custom Software Development',
+                    'Web & Mobile Applications',
+                    'Cloud Infrastructure',
+                    'AI & Machine Learning',
+                ],
+                'cta_headline': 'Ready to Transform Your Business?',
+                'cta_subtitle': "Let's discuss how our innovative software solutions can drive growth, streamline operations, and create competitive advantages for your business.",
+                'cta_benefits': [
+                    'Free initial consultation and project assessment',
+                    'Transparent pricing with no hidden fees',
+                    'Dedicated project manager and development team',
+                    'Regular progress updates and milestone reviews',
+                    'Post-launch support and maintenance',
+                    'Scalable solutions that grow with your business',
+                ],
+                'company_phone': '+1 (555) 123-4567',
+                'company_email': 'hello@kkevo.com',
+                'company_address': '',
+                'live_chat_enabled': True,
+                'trust_companies': ['TechCorp', 'FinanceBank', 'DataFlow', 'InsightMetrics'],
+                'linkedin_url': '',
+                'twitter_url': '',
+                'github_url': '',
+            }
+            return Response(default_config)

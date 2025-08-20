@@ -5,12 +5,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-from services.views import ServiceViewSet, CompanyStatsViewSet
+from services.views import ServiceViewSet, CompanyStatsViewSet, CompanyConfigViewSet
 from team.views import TeamMemberViewSet
 from testimonials.views import TestimonialViewSet
 from contact.views import ContactSubmissionViewSet
 from blog.views import BlogPostViewSet
 from portfolio.views import PortfolioViewSet
+from lead_magnets.views import LeadMagnetSubmissionViewSet
+from case_studies.views import CaseStudyViewSet
 from . import views
 
 # Create router and register viewsets
@@ -19,6 +21,8 @@ router.register(r'stats', CompanyStatsViewSet)
 router.register(r'team', TeamMemberViewSet)
 router.register(r'testimonials', TestimonialViewSet)
 router.register(r'contact', ContactSubmissionViewSet)
+router.register(r'config', CompanyConfigViewSet)
+router.register(r'lead-magnets', LeadMagnetSubmissionViewSet)
 
 app_name = 'api'
 
@@ -37,6 +41,10 @@ urlpatterns = [
     # Portfolio items with slug-based lookups
     path('portfolio/', PortfolioViewSet.as_view({'get': 'list'}), name='portfolio-list'),
     path('portfolio/<slug:slug>/', PortfolioViewSet.as_view({'get': 'retrieve'}), name='portfolio-detail'),
+    
+    # Case studies with slug-based lookups
+    path('case-studies/', CaseStudyViewSet.as_view({'get': 'list'}), name='case-study-list'),
+    path('case-studies/<slug:slug>/', CaseStudyViewSet.as_view({'get': 'retrieve'}), name='case-study-detail'),
     
     # Include router for other endpoints
     path('', include(router.urls)),

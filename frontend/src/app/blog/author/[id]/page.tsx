@@ -176,18 +176,18 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
               
               {/* Social Links */}
               <div className="flex items-center justify-center gap-4">
-                {author.email && (
+                {author.social_links.email && (
                   <a
-                    href={`mailto:${author.email}`}
+                    href={`mailto:${author.social_links.email}`}
                     className="p-3 bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                     title="Email"
                   >
                     <Mail className="w-5 h-5" />
                   </a>
                 )}
-                {author.linkedin_url && (
+                {author.social_links.linkedin && (
                   <a
-                    href={author.linkedin_url}
+                    href={author.social_links.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-3 bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -196,9 +196,9 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                     <Linkedin className="w-5 h-5" />
                   </a>
                 )}
-                {author.twitter_url && (
+                {author.social_links.twitter && (
                   <a
-                    href={author.twitter_url}
+                    href={author.social_links.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-3 bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -207,9 +207,9 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                     <Twitter className="w-5 h-5" />
                   </a>
                 )}
-                {author.website_url && (
+                {author.social_links.website && (
                   <a
-                    href={author.website_url}
+                    href={author.social_links.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-3 bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 rounded-lg transition-colors"

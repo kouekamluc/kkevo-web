@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useTheme } from '@/lib/store';
+import { applyThemeColors } from '@/lib/colors';
 
 interface ThemeContextType {
   theme: string;
@@ -42,6 +43,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     
     // Update data attribute for other scripts
     root.setAttribute('data-theme', resolvedTheme);
+    
+    // Apply theme colors to CSS variables
+    applyThemeColors(resolvedTheme === 'dark');
   }, [resolvedTheme]);
 
   // Prevent hydration mismatch

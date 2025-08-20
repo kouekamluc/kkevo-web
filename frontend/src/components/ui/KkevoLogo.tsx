@@ -15,6 +15,39 @@ const KkevoLogo: React.FC<KkevoLogoProps> = ({
   height = 40,
   variant = 'default'
 }) => {
+  // Ensure consistent rendering between server and client
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div 
+        className={`font-bold tracking-wider flex items-center justify-center ${className}`}
+        style={{ 
+          width: `${width}px`, 
+          height: `${height}px`
+        }}
+      >
+        <div className="relative flex items-center justify-center">
+          <span 
+            className="relative z-10 font-black tracking-widest"
+            style={{ 
+              color: '#1F2937',
+              fontSize: `${Math.max(height * 0.35, 14)}px`,
+              lineHeight: 1,
+              letterSpacing: '0.1em'
+            }}
+          >
+            KKEVO
+          </span>
+        </div>
+      </div>
+    );
+  }
   // Utility: convert hex color to rgba string
   function hexToRgba(hex: string, alpha: number): string {
     const sanitized = hex.replace('#', '');

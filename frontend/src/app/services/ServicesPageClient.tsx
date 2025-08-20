@@ -8,7 +8,7 @@ import { servicesApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, KkevoLogo, PageLoader } from '@/components/ui';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+
 import { useDataCache } from '@/hooks';
 import { Service } from '@/types';
 import { config } from '@/lib/config';
@@ -48,9 +48,8 @@ export default function ServicesPageClient() {
     }
   );
 
-  const services = servicesResponse?.data?.results || servicesResponse?.data || [];
-
   const filteredServices = useMemo(() => {
+    const services = servicesResponse?.data?.results || servicesResponse?.data || [];
     const base: Service[] = Array.isArray(services) ? services.slice() : [];
 
     let filtered = base;
@@ -97,7 +96,7 @@ export default function ServicesPageClient() {
     });
 
     return sorted;
-  }, [services, searchTerm, selectedCategory, selectedComplexity, sortBy]);
+  }, [servicesResponse?.data, searchTerm, selectedCategory, selectedComplexity, sortBy]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -614,7 +613,6 @@ export default function ServicesPageClient() {
           </div>
         </section>
 
-        <Footer />
       </main>
     </>
   );

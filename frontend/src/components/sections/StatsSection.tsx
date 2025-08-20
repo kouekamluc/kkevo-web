@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Users, Award, Star, ArrowRight, CheckCircle } from 'lucide-react';
+import { TrendingUp, Users, Award, Star, ArrowRight, CheckCircle, Rocket, Clock, Zap, Code, Globe } from 'lucide-react';
 import { AnimatedButton } from '@/components/ui';
 import { useInView } from 'react-intersection-observer';
 import { gsap } from 'gsap';
@@ -20,110 +20,23 @@ const StatsSection = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const countersRef = useRef<HTMLSpanElement[]>([]);
 
-  // Fallback stats if no live data
-  const fallbackStats = [
-    {
-      id: '1',
-      name: 'projects',
-      value: 150,
-      suffix: '+',
-      label: 'Projects Delivered',
-      icon_name: 'rocket',
-      color_scheme: 'from-blue-500 to-cyan-500',
-      description: 'Successfully completed projects across various industries',
-      order: 1,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '150+'
-    },
-    {
-      id: '2',
-      name: 'clients',
-      value: 50,
-      suffix: '+',
-      label: 'Happy Clients',
-      icon_name: 'users',
-      color_scheme: 'from-green-500 to-emerald-500',
-      description: 'Satisfied clients who trust us with their digital transformation',
-      order: 2,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '50+'
-    },
-    {
-      id: '3',
-      name: 'experience',
-      value: 8,
-      suffix: '+',
-      label: 'Years Experience',
-      icon_name: 'clock',
-      color_scheme: 'from-purple-500 to-pink-500',
-      description: 'Deep expertise in modern software development technologies',
-      order: 3,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '8+'
-    },
-    {
-      id: '4',
-      name: 'satisfaction',
-      value: 99,
-      suffix: '%',
-      label: 'Client Satisfaction',
-      icon_name: 'award',
-      color_scheme: 'from-yellow-500 to-orange-500',
-      description: 'Consistently high satisfaction ratings from our clients',
-      order: 4,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '99%'
-    },
-    {
-      id: '5',
-      name: 'support',
-      value: 24,
-      suffix: '/7',
-      label: 'Support Available',
-      icon_name: 'zap',
-      color_scheme: 'from-red-500 to-pink-500',
-      description: 'Round-the-clock support for all our deployed solutions',
-      order: 5,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '24/7'
-    },
-    {
-      id: '6',
-      name: 'technologies',
-      value: 15,
-      suffix: '+',
-      label: 'Technologies',
-      icon_name: 'code',
-      color_scheme: 'from-indigo-500 to-violet-500',
-      description: 'Cutting-edge technologies we master and implement',
-      order: 6,
-      is_active: true,
-      created_at: '',
-      updated_at: '',
-      display_value: '15+'
-    }
-  ];
-
   // Fetch stats from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await statsApi.getAll({ limit: 6 });
+        setIsLoading(true);
+        const response = await statsApi.getAll({ limit: 9, ordering: 'order' });
         const liveStats = response.data.results || response.data;
-        setStats(liveStats.length > 0 ? liveStats : fallbackStats);
+        
+        if (liveStats && liveStats.length > 0) {
+          setStats(liveStats);
+        } else {
+          console.warn('No stats data received from API');
+          setStats([]);
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
-        setStats(fallbackStats);
+        setStats([]);
       } finally {
         setIsLoading(false);
       }
@@ -132,22 +45,6 @@ const StatsSection = () => {
     fetchStats();
   }, []);
 
-  // Use live stats if available, otherwise fallback
-  const displayStats = stats.length > 0 ? stats : fallbackStats;
-
-  // Validate stats data structure
-  const validStats = displayStats.filter(stat => 
-    stat && 
-    stat.id && 
-    stat.name && 
-    stat.value !== undefined && 
-    stat.suffix !== undefined && 
-    stat.label !== undefined
-  );
-
-  // If no valid stats, use fallback
-  const finalStats = validStats.length > 0 ? validStats : fallbackStats;
-
   // Helper function to get icon component
   const getIconComponent = (iconName: string) => {
     const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -155,21 +52,36 @@ const StatsSection = () => {
       'users': Users,
       'award': Award,
       'star': Star,
+      'rocket': Rocket,
+      'clock': Clock,
+      'zap': Zap,
+      'code': Code,
+      'globe': Globe,
     };
     return iconMap[iconName] || TrendingUp;
   };
 
+  // Format large numbers for display
+  const formatNumber = (value: number, suffix: string) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M${suffix}`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K${suffix}`;
+    }
+    return `${value}${suffix}`;
+  };
+
   useEffect(() => {
-    if (!statsRef.current || !inView || hasAnimated) return;
+    if (!statsRef.current || !inView || hasAnimated || stats.length === 0) return;
 
     // GSAP animations for stats entrance
     const tl = gsap.timeline();
     
     // Animate counters
     countersRef.current.forEach((counter: HTMLSpanElement, index: number) => {
-      if (!counter) return;
+      if (!counter || !stats[index]) return;
       
-      const stat = finalStats[index];
+      const stat = stats[index];
       const targetNumber = stat.value;
       let currentNumber = 0;
       
@@ -179,7 +91,7 @@ const StatsSection = () => {
         onUpdate: function() {
           const progress = this.progress();
           currentNumber = Math.floor(targetNumber * progress);
-          counter.textContent = currentNumber + stat.suffix;
+          counter.textContent = formatNumber(currentNumber, stat.suffix);
         }
       }, index * 0.1);
     });
@@ -218,11 +130,11 @@ const StatsSection = () => {
     return () => {
       tl.kill();
     };
-  }, [inView, hasAnimated, finalStats]);
+  }, [inView, hasAnimated, stats]);
 
   // Hover effects for stat cards
   useEffect(() => {
-    if (!statsRef.current) return;
+    if (!statsRef.current || stats.length === 0) return;
 
     const statCards = statsRef.current.querySelectorAll('.stat-card');
     
@@ -255,7 +167,40 @@ const StatsSection = () => {
         card.removeEventListener('mouseleave', handleMouseLeave);
       };
     });
-  }, [hasAnimated]);
+  }, [hasAnimated, stats]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-64 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-96 mx-auto mb-16"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-gray-200 dark:bg-gray-700 p-8 rounded-2xl h-48"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show empty state if no stats
+  if (stats.length === 0) {
+    return (
+      <section className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-gray-500 dark:text-gray-400">
+            <p className="text-lg mb-4">Statistics are being updated</p>
+            <p className="text-sm">Please check back later or contact our team for current metrics.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section 
@@ -298,11 +243,11 @@ const StatsSection = () => {
           ref={statsRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {finalStats.map((stat, index) => {
+          {stats.map((stat, index) => {
             const IconComponent = getIconComponent(stat.icon_name);
             return (
             <motion.div
-              key={stat.label}
+              key={stat.id || stat.name}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -351,35 +296,6 @@ const StatsSection = () => {
             );
           })}
         </div>
-
-        {/* Additional Metrics */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-16 text-center"
-        >
-          <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-8 text-white">
-            <h3 className="text-2xl font-bold mb-4">
-              Global Reach & Innovation
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-2">25+</div>
-                <div className="text-indigo-100">Countries Served</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-2">500+</div>
-                <div className="text-indigo-100">Team Members</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-2">1M+</div>
-                <div className="text-indigo-100">Users Impacted</div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
         {/* Bottom CTA */}
         <motion.div

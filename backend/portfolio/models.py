@@ -44,6 +44,10 @@ class Portfolio(models.Model):
         default=list,
         help_text="Key results achieved as JSON array. Example: ['50% cost reduction', '3x faster processing']"
     )
+    results = models.JSONField(
+        default=dict,
+        help_text="Project results as JSON. Example: {'revenue': '+150%', 'users': '+200%', 'conversion': '+180%', 'performance': '+85%'}"
+    )
     
     # Project Details
     budget_range = models.CharField(

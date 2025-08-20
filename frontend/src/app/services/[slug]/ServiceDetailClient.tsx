@@ -6,7 +6,7 @@ import { CheckCircle, ArrowRight, ExternalLink, Eye } from 'lucide-react';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, AnimatedCard } from '@/components/ui';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+
 import { Service } from '@/types';
 
 const processSteps = [
@@ -92,7 +92,17 @@ const relatedProjects = [
 ];
 
 interface ServiceDetailClientProps {
-  service: Service;
+  service: Service & {
+    pricing_tiers?: Record<string, string>;
+    timeline_estimates?: Record<string, string>;
+    budget_ranges?: Record<string, string>;
+    complexity_levels?: string[];
+    deliverables?: string[];
+    average_project_duration?: string;
+    success_rate?: number;
+    display_budget_range?: string;
+    display_timeline?: string;
+  };
 }
 
 export default function ServiceDetailClient({ service }: ServiceDetailClientProps) {
@@ -230,6 +240,142 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
             </StaggerList>
           </div>
         </section>
+
+        {/* Pricing & Details Section */}
+        <section className="py-16 bg-white dark:bg-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <FadeInSection>
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                  Pricing & Project Details
+                </h2>
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                  Transparent pricing and detailed project information to help you make informed decisions.
+                </p>
+              </div>
+            </FadeInSection>
+            
+            <div className="grid lg:grid-cols-2 gap-12">
+              {/* Pricing Tiers */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  Pricing Tiers
+                </h3>
+                <div className="space-y-4">
+                  {service.pricing_tiers && Object.entries(service.pricing_tiers).map(([tier, price], index) => (
+                    <motion.div
+                      key={tier}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-700"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{tier}</h4>
+                        <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{price}</span>
+                      </div>
+                      {service.timeline_estimates?.[tier] && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                          Timeline: {service.timeline_estimates[tier]}
+                        </p>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {service.display_budget_range && (
+                  <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>Budget Range:</strong> {service.display_budget_range}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Project Details */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  Project Information
+                </h3>
+                <div className="space-y-4">
+                  {service.average_project_duration && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <span className="text-2xl">⏱️</span>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">Average Duration</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{service.average_project_duration}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {service.success_rate && (
+                    <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                      <span className="text-2xl">🎯</span>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">Success Rate</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{service.success_rate}%</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {service.complexity_levels && (
+                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                      <p className="font-semibold text-gray-900 dark:text-white mb-2">Complexity Levels</p>
+                      <div className="flex flex-wrap gap-2">
+                        {service.complexity_levels.map((level, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full"
+                          >
+                            {level}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Deliverables Section */}
+        {service.deliverables && service.deliverables.length > 0 && (
+          <section className="py-16 bg-gray-50 dark:bg-gray-900">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <FadeInSection>
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                    What You'll Receive
+                  </h2>
+                  <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                    Comprehensive deliverables that ensure your project's success and long-term value.
+                  </p>
+                </div>
+              </FadeInSection>
+              
+              <StaggerList>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {service.deliverables.map((deliverable, index) => (
+                    <motion.div
+                      key={index}
+                      className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+                      whileHover={{ y: -5 }}
+                    >
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4">
+                        <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {deliverable}
+                      </h3>
+                    </motion.div>
+                  ))}
+                </div>
+              </StaggerList>
+            </div>
+          </section>
+        )}
 
         {/* Our Process Section */}
         <section className="py-16 bg-gray-50 dark:bg-gray-900">
@@ -451,7 +597,6 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
           </div>
         </section>
 
-        <Footer />
       </main>
     </>
   );

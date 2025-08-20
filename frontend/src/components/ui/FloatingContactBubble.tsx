@@ -6,34 +6,41 @@ import { MessageCircle, X, Mail, Phone, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useStore';
 import { useIsReducedMotion } from '@/hooks';
+import { useCompanyConfig } from '@/components/providers/CompanyConfigProvider';
 
-const contactMethods = [
-  {
-    icon: Mail,
-    label: 'Email',
-    action: 'mailto:hello@kkevo.com',
-    color: 'bg-blue-500 hover:bg-blue-600'
-  },
-  {
-    icon: Phone,
-    label: 'Call',
-    action: 'tel:+15551234567',
-    color: 'bg-green-500 hover:bg-green-600'
-  },
-  {
-    icon: MapPin,
-    label: 'Location',
-    action: 'https://maps.google.com',
-    color: 'bg-purple-500 hover:bg-purple-600'
-  }
-];
-
-export default function FloatingContactBubble() {
+const FloatingContactBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const { openContactForm } = useAppStore();
+  const { config } = useCompanyConfig();
   const isReducedMotion = useIsReducedMotion();
   const router = useRouter();
+
+  // Use dynamic config or fallback to defaults
+  const companyPhone = config?.company_phone || '+1 (555) 123-4567';
+  const companyEmail = config?.company_email || 'hello@kkevo.com';
+  const companyAddress = config?.company_address || '';
+
+  const contactMethods = [
+    {
+      icon: Mail,
+      label: 'Email',
+      action: `mailto:${companyEmail}`,
+      color: 'bg-blue-500 hover:bg-blue-600'
+    },
+    {
+      icon: Phone,
+      label: 'Call',
+      action: `tel:${companyPhone}`,
+      color: 'bg-green-500 hover:bg-green-600'
+    },
+    {
+      icon: MapPin,
+      label: 'Location',
+      action: companyAddress ? `https://maps.google.com/?q=${encodeURIComponent(companyAddress)}` : 'https://maps.google.com',
+      color: 'bg-purple-500 hover:bg-purple-600'
+    }
+  ];
 
   useEffect(() => {
     // Show bubble after 3 seconds
@@ -151,3 +158,5 @@ export default function FloatingContactBubble() {
     </div>
   );
 }
+
+export default FloatingContactBubble;

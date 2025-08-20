@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Fallback blog posts if no live data
-  const fallbackPosts: BlogPost[] = [
+  const fallbackPosts: BlogPost[] = useMemo(() => [
     {
       id: '1',
       title: 'The Future of Web Development in 2024',
@@ -81,7 +81,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
         avatar: '/api/placeholder/100/100'
       }
     }
-  ];
+  ], []);
 
   // Fetch blog posts from API
   useEffect(() => {
@@ -104,7 +104,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
     } else {
       fetchPosts();
     }
-  }, [blogPosts]);
+  }, [blogPosts, fallbackPosts]);
 
   // Use live posts if available, otherwise fallback
   const displayPosts = posts.length > 0 ? posts : fallbackPosts;

@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import Header from '@/components/layout/Header';
 import HeroSection from '@/components/sections/HeroSection';
 import ServicesMarquee from '@/components/sections/ServicesMarquee';
 import CaseStudyCarousel from '@/components/sections/CaseStudyCarousel';
@@ -8,7 +7,6 @@ import TeamPreview from '@/components/sections/TeamPreview';
 import BlogPreview from '@/components/sections/BlogPreview';
 import StatsSection from '@/components/sections/StatsSection';
 import CTASection from '@/components/sections/CTASection';
-import Footer from '@/components/layout/Footer';
 
 import { Service, Testimonial, TeamMember, BlogPost } from '@/types';
 import { commonMeta } from './seo';
@@ -52,8 +50,7 @@ export default async function HomePage() {
   const { services, testimonials, teamMembers, blogPosts } = await getHomePageData();
 
   return (
-    <main className="min-h-screen">
-      <Header />
+    <>
       <HeroSection />
       <ServicesMarquee services={services} />
       <CaseStudyCarousel />
@@ -62,7 +59,6 @@ export default async function HomePage() {
       <BlogPreview blogPosts={blogPosts} />
       <StatsSection />
       <CTASection />
-      <Footer />
-    </main>
+    </>
   );
 }

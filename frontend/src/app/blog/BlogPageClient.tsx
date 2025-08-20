@@ -6,7 +6,7 @@ import { Search, Calendar, Clock, ArrowRight, ChevronLeft, ChevronRight, Star, E
 import Link from 'next/link';
 import { blogApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
-import { AnimatedCard, AnimatedButton } from '@/components/ui';
+import { AnimatedCard, AnimatedButton, KkevoLogo } from '@/components/ui';
 import { BlogPost } from '@/types';
 
 const popularTags = [
@@ -187,11 +187,11 @@ export default function BlogPageClient() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-theme-primary">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
-            <p className="text-white text-xl mt-4">Loading blog posts...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-theme-accent mx-auto"></div>
+            <p className="text-theme-primary text-xl mt-4">Loading blog posts...</p>
           </div>
         </div>
       </div>
@@ -201,15 +201,15 @@ export default function BlogPageClient() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-theme-primary">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="text-red-400 text-6xl mb-4">⚠️</div>
-            <h1 className="text-3xl font-bold text-white mb-4">Oops! Something went wrong</h1>
-            <p className="text-gray-300 mb-8">{error}</p>
+            <h1 className="text-3xl font-bold text-theme-primary mb-4">Oops! Something went wrong</h1>
+            <p className="text-theme-secondary mb-8">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-6 py-3 bg-theme-accent text-white font-medium rounded-lg hover:bg-theme-accent/80 transition-colors"
             >
               Try Again
             </button>
@@ -220,15 +220,30 @@ export default function BlogPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-theme-secondary">
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <FadeInSection>
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold text-white mb-6">
+            {/* Company Logo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="flex justify-center mb-8"
+            >
+              <KkevoLogo
+                width={120}
+                height={40}
+                variant="default"
+                className="drop-shadow-lg"
+              />
+            </motion.div>
+            
+            <h1 className="text-5xl font-bold text-theme-primary mb-6">
               KKEVO Blog
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-theme-secondary max-w-3xl mx-auto">
               Insights, tutorials, and industry knowledge from our team of experts. 
               Stay ahead with the latest in technology, business, and development.
             </p>
@@ -239,7 +254,7 @@ export default function BlogPageClient() {
         {featuredPosts.length > 0 && (
           <FadeInSection>
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-white mb-8 text-center">
+              <h2 className="text-3xl font-bold text-theme-primary mb-8 text-center">
                 Featured Posts
               </h2>
               <div className="relative">
@@ -255,7 +270,7 @@ export default function BlogPageClient() {
                     >
                       {featuredPosts[currentCarouselIndex] && (
                         <div className="relative h-96 md:h-[500px]">
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent z-10" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10" />
                           <img
                             src={featuredPosts[currentCarouselIndex].hero_image_url || '/api/placeholder/800/400'}
                             alt={featuredPosts[currentCarouselIndex].title}
@@ -488,9 +503,11 @@ export default function BlogPageClient() {
                             )}
                             
                             {/* Category Badge */}
-                            <div className="absolute top-4 right-4 px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded">
-                              {post.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </div>
+                            {post.category && (
+                              <div className="absolute top-4 right-4 px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded">
+                                {post.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </div>
+                            )}
                           </div>
 
                           {/* Content */}

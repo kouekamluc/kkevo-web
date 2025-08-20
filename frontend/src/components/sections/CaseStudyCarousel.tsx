@@ -1,136 +1,156 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, ExternalLink, Play, Pause, Eye, Users, TrendingUp, Star, DollarSign } from 'lucide-react';
 import { AnimatedCard, AnimatedButton } from '@/components/ui';
-import { portfolioApi } from '@/lib/api';
-import { Portfolio } from '@/types';
+import { caseStudiesApi } from '@/lib/api';
+import { CaseStudy } from '@/types';
 import { gsap } from 'gsap';
 
 const CaseStudyCarousel = () => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [caseStudies, setCaseStudies] = useState<Portfolio[]>([]);
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
 
   // Fallback case studies if no live data
-  const fallbackCaseStudies: Portfolio[] = [
+  const fallbackCaseStudies: CaseStudy[] = useMemo(() => [
     {
       id: '1',
       title: 'E-Commerce Platform Transformation',
-      description: 'Revolutionized a traditional retail business with a modern, scalable e-commerce solution.',
-      long_description: 'A comprehensive e-commerce solution that transformed a traditional retail business into a digital powerhouse.',
-      category: 'web',
-      client: 'TechCorp',
-      year: '2024',
-      technologies: ['React', 'Node.js', 'PostgreSQL', 'AWS'],
-      duration: '6 months',
+      subtitle: 'How we helped TechCorp increase revenue by 240%',
+      summary: 'Revolutionized a traditional retail business with a modern, scalable e-commerce solution.',
+      description: 'A comprehensive e-commerce solution that transformed a traditional retail business into a digital powerhouse.',
+      client_name: 'TechCorp Inc.',
+      client_industry: 'Technology',
+      category: 'ecommerce',
+      project_duration: '6 months',
       team_size: '8 developers',
-      results: {
-        revenue: '+240%',
-        conversion: '+180%',
-        users: '+320%',
-        performance: '+85%'
-      },
+      challenge: 'TechCorp was experiencing high cart abandonment rates and poor user engagement.',
+      solution: 'We redesigned the entire user interface and implemented advanced search with AI-powered recommendations.',
+      approach: 'User-centered design approach with extensive A/B testing and optimization.',
+      technologies: ['React', 'Node.js', 'PostgreSQL', 'AWS'],
+      tools: ['Figma', 'Jira', 'GitHub Actions'],
+      business_objectives: ['Increase conversion rate', 'Reduce cart abandonment', 'Improve user engagement'],
+      key_results: ['240% revenue increase', '180% conversion improvement', '320% user growth'],
+      metrics: { revenue: '+240%', conversion: '+180%', users: '+320%', performance: '+85%' },
+      roi: 'ROI: 340% in first year',
       is_featured: true,
+      is_published: true,
       order: 1,
-      status: 'published',
+      reading_time: 5,
+      has_metrics: true,
+      has_testimonial: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 5,
-      gallery_images: [],
+      published_at: '2024-01-01T00:00:00Z',
       slug: 'ecommerce-platform'
     },
     {
       id: '2',
       title: 'AI-Powered Analytics Dashboard',
-      description: 'Built an intelligent analytics platform that provides real-time insights and predictive analytics.',
-      long_description: 'An intelligent analytics platform that uses machine learning to provide actionable insights and predictive analytics for business intelligence.',
+      subtitle: 'Revolutionizing data analytics with machine learning',
+      summary: 'Built an intelligent analytics platform that provides real-time insights and predictive analytics.',
+      description: 'An intelligent analytics platform that uses machine learning to provide actionable insights and predictive analytics for business intelligence.',
+      client_name: 'DataFlow Inc.',
+      client_industry: 'Technology',
       category: 'ai',
-      client: 'DataFlow',
-      year: '2024',
-      technologies: ['Python', 'TensorFlow', 'React', 'Docker'],
-      duration: '8 months',
+      project_duration: '8 months',
       team_size: '12 developers',
-      results: {
-        revenue: '+180%',
-        conversion: '+150%',
-        users: '+280%',
-        performance: '+92%'
-      },
+      challenge: 'DataFlow needed to process and analyze massive amounts of data to provide actionable business insights.',
+      solution: 'We developed a comprehensive AI platform that processes data in real-time, providing predictive analytics and recommendations.',
+      approach: 'We used an agile methodology with continuous stakeholder feedback, implementing advanced machine learning algorithms.',
+      technologies: ['Python', 'TensorFlow', 'React', 'Docker'],
+      tools: ['Jupyter', 'MLflow', 'Kubernetes'],
+      business_objectives: ['Improve data insights', 'Reduce analysis time', 'Increase prediction accuracy'],
+      key_results: ['180% revenue increase', '150% conversion improvement', '280% user growth'],
+      metrics: { revenue: '+180%', conversion: '+150%', users: '+280%', performance: '+92%' },
+      roi: 'ROI: 250% in first year',
       is_featured: true,
+      is_published: true,
       order: 2,
-      status: 'published',
+      reading_time: 6,
+      has_metrics: true,
+      has_testimonial: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 6,
-      gallery_images: [],
+      published_at: '2024-01-01T00:00:00Z',
       slug: 'ai-analytics'
     },
     {
       id: '3',
       title: 'Mobile Banking Application',
-      description: 'Developed a secure, feature-rich mobile banking app with biometric authentication.',
-      long_description: 'A secure mobile banking application with biometric authentication, real-time transactions, and comprehensive financial management tools.',
+      subtitle: 'Secure banking with biometric authentication',
+      summary: 'Developed a secure, feature-rich mobile banking app with biometric authentication.',
+      description: 'A secure mobile banking application with biometric authentication, real-time transactions, and comprehensive financial management tools.',
+      client_name: 'FinanceBank',
+      client_industry: 'Finance',
       category: 'mobile',
-      client: 'FinanceBank',
-      year: '2024',
-      technologies: ['React Native', 'TypeScript', 'Firebase', 'Stripe'],
-      duration: '10 months',
+      project_duration: '10 months',
       team_size: '15 developers',
-      results: {
-        revenue: '+300%',
-        conversion: '+220%',
-        users: '+450%',
-        performance: '+88%'
-      },
+      challenge: 'FinanceBank needed a secure mobile banking solution with biometric authentication and real-time transaction processing.',
+      solution: 'We developed a comprehensive mobile banking app with advanced security features, biometric authentication, and real-time transaction processing.',
+      approach: 'We used a security-first approach with extensive testing, implementing industry-standard security protocols and biometric authentication.',
+      technologies: ['React Native', 'TypeScript', 'Firebase', 'Stripe'],
+      tools: ['Figma', 'Jira', 'GitHub Actions'],
+      business_objectives: ['Improve security', 'Enhance user experience', 'Increase mobile adoption'],
+      key_results: ['300% revenue increase', '220% conversion improvement', '450% user growth'],
+      metrics: { revenue: '+300%', conversion: '+220%', users: '+450%', performance: '+88%' },
+      roi: 'ROI: 320% in first year',
       is_featured: true,
+      is_published: true,
       order: 3,
-      status: 'published',
+      reading_time: 7,
+      has_metrics: true,
+      has_testimonial: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 7,
-      gallery_images: [],
+      published_at: '2024-01-01T00:00:00Z',
       slug: 'mobile-banking'
     },
     {
       id: '4',
       title: 'Cloud Infrastructure Migration',
-      description: 'Migrated legacy systems to modern cloud infrastructure with automated deployment.',
-      long_description: 'Migrated legacy systems to modern cloud infrastructure with automated deployment pipelines and monitoring.',
+      subtitle: 'Modernizing legacy systems with cloud-native solutions',
+      summary: 'Migrated legacy systems to modern cloud infrastructure with automated deployment.',
+      description: 'Migrated legacy systems to modern cloud infrastructure with automated deployment pipelines and monitoring.',
+      client_name: 'CloudTech Solutions',
+      client_industry: 'Technology',
       category: 'devops',
-      client: 'CloudTech',
-      year: '2023',
-      technologies: ['AWS', 'Kubernetes', 'Terraform', 'Jenkins'],
-      duration: '4 months',
+      project_duration: '4 months',
       team_size: '6 developers',
-      results: {
-        revenue: '+120%',
-        conversion: '+90%',
-        users: '+200%',
-        performance: '+95%'
-      },
+      challenge: 'CloudTech had legacy systems that were difficult to maintain and scale, requiring manual deployment processes.',
+      solution: 'We migrated their infrastructure to modern cloud-native solutions with automated CI/CD pipelines and comprehensive monitoring.',
+      approach: 'We used infrastructure as code principles with Terraform, implemented automated deployment pipelines, and added comprehensive monitoring.',
+      technologies: ['AWS', 'Kubernetes', 'Terraform', 'Jenkins'],
+      tools: ['GitHub Actions', 'Prometheus', 'Grafana'],
+      business_objectives: ['Improve scalability', 'Reduce deployment time', 'Enhance monitoring'],
+      key_results: ['120% revenue increase', '90% conversion improvement', '200% user growth'],
+      metrics: { revenue: '+120%', conversion: '+90%', users: '+200%', performance: '+95%' },
+      roi: 'ROI: 180% in first year',
       is_featured: true,
+      is_published: true,
       order: 4,
-      status: 'published',
+      reading_time: 4,
+      has_metrics: true,
+      has_testimonial: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 4,
-      gallery_images: [],
+      published_at: '2024-01-01T00:00:00Z',
       slug: 'cloud-migration'
     }
-  ];
+  ], []);
 
   // Fetch case studies from API
   useEffect(() => {
     const fetchCaseStudies = async () => {
       try {
-        const response = await portfolioApi.getFeatured();
+        const response = await caseStudiesApi.getFeatured();
         const liveCaseStudies = response.data.results || response.data;
         setCaseStudies(liveCaseStudies.length > 0 ? liveCaseStudies : fallbackCaseStudies);
       } catch (error) {
@@ -142,7 +162,7 @@ const CaseStudyCarousel = () => {
     };
 
     fetchCaseStudies();
-  }, []);
+  }, [fallbackCaseStudies]);
 
   // Use live case studies if available, otherwise fallback
   const displayCaseStudies = caseStudies.length > 0 ? caseStudies : fallbackCaseStudies;
@@ -152,12 +172,12 @@ const CaseStudyCarousel = () => {
     study && 
     study.id && 
     study.title && 
-    study.results && 
-    typeof study.results === 'object' &&
-    study.results.revenue !== undefined &&
-    study.results.users !== undefined &&
-    study.results.conversion !== undefined &&
-    study.results.performance !== undefined
+    study.metrics && 
+    typeof study.metrics === 'object' &&
+    study.metrics.revenue !== undefined &&
+    study.metrics.users !== undefined &&
+    study.metrics.conversion !== undefined &&
+    study.metrics.performance !== undefined
   );
 
   // If no valid case studies, use fallback
@@ -344,7 +364,7 @@ const CaseStudyCarousel = () => {
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="text-center">
                                   <div className="text-sm text-gray-500 dark:text-gray-400">Duration</div>
-                                  <div className="font-semibold text-gray-900 dark:text-white">{study.duration}</div>
+                                  <div className="font-semibold text-gray-900 dark:text-white">{study.project_duration}</div>
                                 </div>
                                 <div className="text-center">
                                   <div className="text-sm text-gray-500 dark:text-gray-400">Team Size</div>
@@ -381,7 +401,7 @@ const CaseStudyCarousel = () => {
                               {study.title}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                              {study.description}
+                              {study.summary}
                             </p>
                           </div>
 
@@ -394,7 +414,7 @@ const CaseStudyCarousel = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
-                                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{study.results?.revenue || 'N/A'}</div>
+                                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{study.metrics?.revenue || 'N/A'}</div>
                                 </div>
                               </div>
                             </div>
@@ -406,7 +426,7 @@ const CaseStudyCarousel = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-600 dark:text-gray-400">Users</div>
-                                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{study.results?.users || 'N/A'}</div>
+                                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{study.metrics?.users || 'N/A'}</div>
                                 </div>
                               </div>
                             </div>
@@ -418,7 +438,7 @@ const CaseStudyCarousel = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-600 dark:text-gray-400">Conversion</div>
-                                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{study.results?.conversion || 'N/A'}</div>
+                                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{study.metrics?.conversion || 'N/A'}</div>
                                 </div>
                               </div>
                             </div>
@@ -430,7 +450,7 @@ const CaseStudyCarousel = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-600 dark:text-gray-400">Performance</div>
-                                  <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{study.results?.performance || 'N/A'}</div>
+                                  <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{study.metrics?.performance || 'N/A'}</div>
                                 </div>
                               </div>
                             </div>
@@ -441,7 +461,7 @@ const CaseStudyCarousel = () => {
                             <AnimatedButton
                               variant="primary"
                               size="lg"
-                              onClick={() => router.push('/work')}
+                              onClick={() => router.push(`/case-studies/${study.slug}`)}
                               className="w-full"
                             >
                               View Full Case Study

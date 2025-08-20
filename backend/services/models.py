@@ -10,10 +10,11 @@ class Service(models.Model):
     """Service model for KKEVO services."""
     
     CATEGORY_CHOICES = [
-        ('web', 'Web Development'),
-        ('mobile', 'Mobile Development'),
-        ('devops', 'DevOps & Cloud'),
-        ('ai', 'AI & Machine Learning'),
+        ('web-development', 'Web Development'),
+        ('mobile-development', 'Mobile Development'),
+        ('cloud-solutions', 'Cloud Solutions'),
+        ('ai-ml', 'AI & Machine Learning'),
+        ('devops', 'DevOps & Infrastructure'),
         ('consulting', 'Consulting'),
         ('design', 'UI/UX Design'),
     ]
@@ -156,3 +157,114 @@ class CompanyStats(models.Model):
 
     def get_display_value(self):
         return f"{self.value}{self.suffix}"
+
+
+class CompanyConfig(models.Model):
+    """Company configuration for managing frontend content"""
+    
+    # Hero Section Configuration
+    hero_headline = models.CharField(
+        max_length=200,
+        default="We Build Software That Moves Markets",
+        help_text="Main headline for the hero section"
+    )
+    hero_subtitle = models.TextField(
+        default="Transform your business with cutting-edge software solutions. From web applications to AI-powered systems, we deliver results that drive growth.",
+        help_text="Subtitle text below the main headline"
+    )
+    hero_features = models.JSONField(
+        default=list,
+        help_text="Hero features as JSON array. Example: ['Custom Software Development', 'Web & Mobile Applications']"
+    )
+    
+    # CTA Section Configuration
+    cta_headline = models.CharField(
+        max_length=200,
+        default="Ready to Transform Your Business?",
+        help_text="Main CTA headline"
+    )
+    cta_subtitle = models.TextField(
+        default="Let's discuss how our innovative software solutions can drive growth, streamline operations, and create competitive advantages for your business.",
+        help_text="CTA subtitle text"
+    )
+    cta_benefits = models.JSONField(
+        default=list,
+        help_text="CTA benefits as JSON array"
+    )
+    
+    # Contact Information
+    company_phone = models.CharField(
+        max_length=20,
+        default="+1 (555) 123-4567",
+        help_text="Company phone number"
+    )
+    company_email = models.EmailField(
+        default="hello@kkevo.com",
+        help_text="Company email address"
+    )
+    company_address = models.TextField(
+        blank=True,
+        help_text="Company office address"
+    )
+    live_chat_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable live chat functionality"
+    )
+    
+    # Trust Indicators
+    trust_companies = models.JSONField(
+        default=list,
+        help_text="Trusted companies logos as JSON array. Example: ['TechCorp', 'FinanceBank']"
+    )
+    
+    # Social Media
+    linkedin_url = models.URLField(blank=True, help_text="Company LinkedIn URL")
+    twitter_url = models.URLField(blank=True, help_text="Company Twitter URL")
+    github_url = models.URLField(blank=True, help_text="Company GitHub URL")
+    
+    # Meta
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Company Configuration'
+        verbose_name_plural = 'Company Configuration'
+    
+    def __str__(self):
+        return "Company Configuration"
+    
+    @classmethod
+    def get_active_config(cls):
+        """Get the active company configuration."""
+        return cls.objects.filter(is_active=True).first()
+    
+    def get_hero_features_display(self):
+        """Return hero features as a list, with fallback to defaults."""
+        if self.hero_features:
+            return self.hero_features
+        return [
+            'Custom Software Development',
+            'Web & Mobile Applications',
+            'Cloud Infrastructure',
+            'AI & Machine Learning',
+        ]
+    
+    def get_cta_benefits_display(self):
+        """Return CTA benefits as a list, with fallback to defaults."""
+        if self.cta_benefits:
+            return self.cta_benefits
+        return [
+            'Free initial consultation and project assessment',
+            'Transparent pricing with no hidden fees',
+            'Dedicated project manager and development team',
+            'Regular progress updates and milestone reviews',
+            'Post-launch support and maintenance',
+            'Scalable solutions that grow with your business',
+        ]
+    
+    def get_trust_companies_display(self):
+        """Return trust companies as a list, with fallback to defaults."""
+        if self.trust_companies:
+            return self.trust_companies
+        return ['TechCorp', 'FinanceBank', 'DataFlow', 'InsightMetrics']

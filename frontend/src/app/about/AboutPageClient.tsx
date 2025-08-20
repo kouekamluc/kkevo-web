@@ -32,7 +32,7 @@ import { teamApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, AnimatedCard, KkevoLogo } from '@/components/ui';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+
 import Link from 'next/link';
 
 interface TeamMember {
@@ -639,7 +639,6 @@ export default function AboutPageClient() {
           </div>
         </section>
 
-        <Footer />
       </main>
     </>
   );

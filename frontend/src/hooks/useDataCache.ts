@@ -195,7 +195,7 @@ export const useDataCache = <T>(
         abortControllerRef.current.abort();
       }
     };
-  }, [key, enabled]);
+  }, [key, enabled, ttl, onSuccess, onError]);
 
   // Cleanup on unmount
   useEffect(() => {

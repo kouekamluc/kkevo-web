@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     <language>en-US</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <generator>KKEVO Blog RSS Generator</generator>
-    ${posts.map(post => `
+    ${posts.map((post: any) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
       <description><![CDATA[${post.summary}]]></description>
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       <guid>${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/blog/${post.slug}</guid>
       <pubDate>${new Date(post.published_at).toUTCString()}</pubDate>
       <category>${post.category}</category>
-      ${post.tags?.map(tag => `<category>${tag}</category>`).join('') || ''}
+      ${post.tags?.map((tag: any) => `<category>${tag}</category>`).join('') || ''}
       ${post.author ? `<author>${post.author.email || post.author.name}</author>` : ''}
     </item>`).join('')}
   </channel>

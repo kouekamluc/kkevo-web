@@ -31,228 +31,11 @@ import Link from 'next/link';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedCard, AnimatedButton, KkevoLogo } from '@/components/ui';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+
 import { portfolioApi } from '@/lib/api';
 import { Portfolio } from '@/types';
 
-// Mock data - in real app this would come from API
-const mockProjects: Portfolio[] = [
-  {
-    id: '1',
-    title: 'E-Commerce Platform',
-    description: 'A modern, scalable e-commerce platform built with Next.js and Node.js, featuring advanced search, payment integration, and admin dashboard.',
-    long_description: 'A comprehensive e-commerce solution that transformed a traditional retail business into a digital powerhouse.',
-    category: 'web',
-    client: 'TechCorp',
-    year: '2024',
-    technologies: ['Next.js', 'Node.js', 'PostgreSQL', 'Stripe', 'TailwindCSS'],
-    duration: '6 months',
-    team_size: '8 developers',
-    results: {
-      revenue: '+240%',
-      conversion: '+180%',
-      users: '+320%',
-      performance: '+85%'
-    },
-    live_url: 'https://example.com',
-    github_url: 'https://github.com/example',
-    is_featured: true,
-    order: 1,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 5,
-    gallery_images: [],
-    slug: 'ecommerce-platform'
-  },
-  {
-    id: '2',
-    title: 'Mobile Banking App',
-    description: 'Secure mobile banking application with biometric authentication, real-time transactions, and comprehensive financial management tools.',
-    long_description: 'A secure mobile banking application with biometric authentication, real-time transactions, and comprehensive financial management tools.',
-    category: 'mobile',
-    client: 'FinanceBank',
-    year: '2024',
-    technologies: ['React Native', 'TypeScript', 'Firebase', 'Biometrics', 'Redux'],
-    duration: '10 months',
-    team_size: '15 developers',
-    results: {
-      revenue: '+300%',
-      conversion: '+220%',
-      users: '+450%',
-      performance: '+88%'
-    },
-    live_url: 'https://example.com',
-    is_featured: true,
-    order: 2,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 7,
-    gallery_images: [],
-    slug: 'mobile-banking'
-  },
-  {
-    id: '3',
-    title: 'AI-Powered Analytics Dashboard',
-    description: 'Intelligent analytics platform that uses machine learning to provide actionable insights and predictive analytics for business intelligence.',
-    long_description: 'An intelligent analytics platform that uses machine learning to provide actionable insights and predictive analytics for business intelligence.',
-    category: 'ai',
-    client: 'DataFlow',
-    year: '2023',
-    technologies: ['Python', 'TensorFlow', 'React', 'D3.js', 'FastAPI'],
-    duration: '8 months',
-    team_size: '12 developers',
-    results: {
-      revenue: '+180%',
-      conversion: '+150%',
-      users: '+280%',
-      performance: '+92%'
-    },
-    github_url: 'https://github.com/example',
-    is_featured: true,
-    order: 3,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 6,
-    gallery_images: [],
-    slug: 'ai-analytics'
-  },
-  {
-    id: '4',
-    title: 'DevOps Automation Platform',
-    description: 'Comprehensive DevOps solution with CI/CD pipelines, infrastructure as code, and automated monitoring and alerting systems.',
-    long_description: 'A comprehensive DevOps solution with CI/CD pipelines, infrastructure as code, and automated monitoring and alerting systems.',
-    category: 'devops',
-    client: 'CloudTech',
-    year: '2023',
-    technologies: ['Docker', 'Kubernetes', 'Jenkins', 'Terraform', 'Prometheus'],
-    duration: '4 months',
-    team_size: '6 developers',
-    results: {
-      revenue: '+120%',
-      conversion: '+90%',
-      users: '+200%',
-      performance: '+95%'
-    },
-    is_featured: true,
-    order: 4,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 4,
-    gallery_images: [],
-    slug: 'devops-automation'
-  },
-  {
-    id: '5',
-    title: 'Healthcare Management System',
-    description: 'HIPAA-compliant healthcare management platform with patient records, appointment scheduling, and telemedicine capabilities.',
-    long_description: 'A HIPAA-compliant healthcare management platform with patient records, appointment scheduling, and telemedicine capabilities.',
-    category: 'web',
-    client: 'HealthCare Plus',
-    year: '2023',
-    technologies: ['Vue.js', 'Laravel', 'MySQL', 'WebRTC', 'Redis'],
-    duration: '12 months',
-    team_size: '10 developers',
-    results: {
-      revenue: '+150%',
-      conversion: '+120%',
-      users: '+250%',
-      performance: '+90%'
-    },
-    live_url: 'https://example.com',
-    is_featured: false,
-    order: 5,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 8,
-    gallery_images: [],
-    slug: 'healthcare-system'
-  },
-  {
-    id: '6',
-    title: 'Smart Home IoT Platform',
-    description: 'Internet of Things platform for smart home automation with mobile app control, voice commands, and energy optimization.',
-    long_description: 'An Internet of Things platform for smart home automation with mobile app control, voice commands, and energy optimization.',
-    category: 'mobile',
-    client: 'SmartHome Inc',
-    year: '2023',
-    technologies: ['Flutter', 'Node.js', 'MQTT', 'MongoDB', 'AWS IoT'],
-    duration: '9 months',
-    team_size: '8 developers',
-    results: {
-      revenue: '+180%',
-      conversion: '+140%',
-      users: '+300%',
-      performance: '+85%'
-    },
-    live_url: 'https://example.com',
-    is_featured: false,
-    order: 6,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 6,
-    gallery_images: [],
-    slug: 'smart-home-iot'
-  },
-  {
-    id: '7',
-    title: 'Supply Chain Optimization',
-    description: 'AI-driven supply chain management system with predictive analytics, route optimization, and real-time tracking capabilities.',
-    long_description: 'An AI-driven supply chain management system with predictive analytics, route optimization, and real-time tracking capabilities.',
-    category: 'ai',
-    client: 'LogiCorp',
-    year: '2022',
-    technologies: ['Python', 'Scikit-learn', 'React', 'PostgreSQL', 'Docker'],
-    duration: '14 months',
-    team_size: '12 developers',
-    results: {
-      revenue: '+200%',
-      conversion: '+160%',
-      users: '+350%',
-      performance: '+88%'
-    },
-    is_featured: false,
-    order: 7,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 9,
-    gallery_images: [],
-    slug: 'supply-chain-ai'
-  },
-  {
-    id: '8',
-    title: 'Real Estate CRM',
-    description: 'Customer relationship management system for real estate agencies with lead management, property listings, and client communication tools.',
-    long_description: 'A customer relationship management system for real estate agencies with lead management, property listings, and client communication tools.',
-    category: 'web',
-    client: 'RealEstate Pro',
-    year: '2022',
-    technologies: ['Angular', 'C#', 'SQL Server', 'SignalR', 'Azure'],
-    duration: '11 months',
-    team_size: '9 developers',
-    results: {
-      revenue: '+160%',
-      conversion: '+130%',
-      users: '+280%',
-      performance: '+87%'
-    },
-    live_url: 'https://example.com',
-    is_featured: false,
-    order: 8,
-    status: 'published',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    reading_time: 7,
-    gallery_images: [],
-    slug: 'real-estate-crm'
-  }
-];
+
 
 const categories = [
   { id: 'all', name: 'All Projects', icon: '🌟', color: 'from-gray-500 to-gray-600' },
@@ -270,11 +53,12 @@ const stats = [
 ];
 
 export default function WorkPageClient() {
-  const [projects, setProjects] = useState<Portfolio[]>(mockProjects);
-  const [filteredProjects, setFilteredProjects] = useState<Portfolio[]>(mockProjects);
+  const [projects, setProjects] = useState<Portfolio[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Portfolio[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProject, setSelectedProject] = useState<Portfolio | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -290,14 +74,16 @@ export default function WorkPageClient() {
     const fetchProjects = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        
         const response = await portfolioApi.getAll();
-        const liveProjects = response.data.results || response.data;
-        setProjects(liveProjects.length > 0 ? liveProjects : []);
-        setFilteredProjects(liveProjects.length > 0 ? liveProjects : []);
+        const portfolioData = response.data.results || response.data || [];
+        
+        setProjects(portfolioData);
+        setFilteredProjects(portfolioData);
       } catch (error) {
-        console.error('Error fetching projects:', error);
-        setProjects([]);
-        setFilteredProjects([]);
+        console.error('Error fetching portfolio projects:', error);
+        setError('Failed to load portfolio projects. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -439,6 +225,24 @@ export default function WorkPageClient() {
               <div className="text-center py-20">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
                 <p className="text-lg text-gray-600 dark:text-gray-400">Loading projects...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <div className="w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="text-red-500 text-4xl">⚠️</div>
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Failed to load projects
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {error}
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="text-center py-20">
@@ -797,7 +601,6 @@ export default function WorkPageClient() {
           )}
         </AnimatePresence>
 
-        <Footer />
       </main>
     </>
   );

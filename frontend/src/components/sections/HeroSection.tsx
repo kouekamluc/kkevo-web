@@ -3,9 +3,15 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Play, CheckCircle } from 'lucide-react';
 import { AnimatedButton, KkevoLogo } from '@/components/ui';
+import { useCompanyConfig } from '@/components/providers/CompanyConfigProvider';
 
 const HeroSection = () => {
-  const features = [
+  const { config } = useCompanyConfig();
+  
+  // Use dynamic config or fallback to defaults
+  const headline = config?.hero_headline || 'We Build Software That Moves Markets';
+  const subtitle = config?.hero_subtitle || 'Transform your business with cutting-edge software solutions. From web applications to AI-powered systems, we deliver results that drive growth.';
+  const features = config?.hero_features || [
     'Custom Software Development',
     'Web & Mobile Applications',
     'Cloud Infrastructure',
@@ -13,7 +19,7 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden pt-20">
+    <section className="relative min-h-screen flex items-center justify-center bg-theme-primary overflow-hidden pt-20">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-indigo-400/10 to-purple-600/10 rounded-full blur-3xl"></div>
@@ -33,26 +39,31 @@ const HeroSection = () => {
 
         {/* Main Headline */}
         <motion.h1
-          className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-8 leading-tight"
+          className="text-5xl md:text-6xl lg:text-7xl font-bold text-theme-primary mb-8 leading-tight"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          We Build Software That{' '}
-          <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-            Moves Markets
-          </span>
+          {headline.split(' ').map((word, index) => {
+            if (word.toLowerCase().includes('markets')) {
+              return (
+                <span key={index} className="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                  {word}{' '}
+                </span>
+              );
+            }
+            return <span key={index}>{word} </span>;
+          })}
         </motion.h1>
 
         {/* Subtitle */}
         <motion.p
-          className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+          className="text-xl md:text-2xl text-theme-secondary mb-12 max-w-4xl mx-auto leading-relaxed"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          Transform your business with cutting-edge software solutions. 
-          From web applications to AI-powered systems, we deliver results that drive growth.
+          {subtitle}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -93,7 +104,7 @@ const HeroSection = () => {
           {features.map((feature, index) => (
             <motion.div
               key={feature}
-              className="flex flex-col items-center space-y-3 text-gray-700 dark:text-gray-300"
+              className="flex flex-col items-center space-y-3 text-theme-secondary"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 1 + index * 0.1 }}
@@ -114,16 +125,16 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 1.2 }}
         >
           <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">500+</div>
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium">Projects Delivered</div>
+            <div className="text-4xl md:text-5xl font-bold text-theme-accent mb-2">500+</div>
+            <div className="text-theme-secondary text-sm font-medium">Projects Delivered</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">98%</div>
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium">Client Satisfaction</div>
+            <div className="text-4xl md:text-5xl font-bold text-theme-accent mb-2">98%</div>
+            <div className="text-theme-secondary text-sm font-medium">Client Satisfaction</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-cyan-600 dark:text-cyan-400 mb-2">24/7</div>
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium">Support Available</div>
+            <div className="text-4xl md:text-5xl font-bold text-theme-accent mb-2">24/7</div>
+            <div className="text-theme-secondary text-sm font-medium">Support Available</div>
           </div>
         </motion.div>
       </div>
@@ -135,9 +146,9 @@ const HeroSection = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 2 }}
       >
-        <div className="w-6 h-10 border-2 border-gray-400 dark:border-gray-600 rounded-full flex justify-center">
+        <div className="w-6 h-10 border-2 border-theme-secondary rounded-full flex justify-center">
           <motion.div
-            className="w-1 h-3 bg-gray-400 dark:bg-gray-600 rounded-full mt-2"
+            className="w-1 h-3 bg-theme-secondary rounded-full mt-2"
             animate={{ y: [0, 12, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
