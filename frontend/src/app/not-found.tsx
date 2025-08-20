@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Search, Home, ArrowRight, AlertTriangle } from 'lucide-react';
-import { AnimatedButton } from '@/components/ui';
+import { AnimatedButton, KkevoLogo } from '@/components/ui';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -42,6 +42,14 @@ export default function NotFound() {
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Page Not Found
             </h1>
+            
+            <div className="flex justify-center mb-6">
+              <KkevoLogo 
+                width={100} 
+                height={35} 
+                variant="colored"
+              />
+            </div>
             
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               Oops! The page you're looking for doesn't exist. It might have been moved, 

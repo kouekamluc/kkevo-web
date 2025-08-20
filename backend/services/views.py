@@ -56,7 +56,15 @@ class CompanyStatsViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             queryset = super().get_queryset()
             
-            # Limit results if specified
+            # Apply ordering BEFORE any slicing
+            ordering = self.request.query_params.get('ordering', None)
+            if ordering:
+                queryset = queryset.order_by(ordering)
+            else:
+                # Use default ordering
+                queryset = queryset.order_by('order', 'name')
+            
+            # Limit results if specified (apply AFTER ordering)
             limit = self.request.query_params.get('limit', None)
             if limit:
                 try:

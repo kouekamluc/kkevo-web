@@ -22,6 +22,9 @@ interface AuthState {
   setUser: (user: User) => void;
   setToken: (token: string) => void;
   setLoading: (loading: boolean) => void;
+  
+  // Analytics
+  trackEvent: (eventName: string, eventData?: Record<string, any>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -49,6 +52,19 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
       setLoading: (loading) => set({ isLoading: loading }),
+      
+      // Analytics tracking
+      trackEvent: (eventName: string, eventData?: Record<string, any>) => {
+        // GTM event tracking
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', eventName, eventData);
+        }
+        
+        // Console logging for development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('GTM Event:', eventName, eventData);
+        }
+      },
     }),
     {
       name: 'kkevo-auth-storage',

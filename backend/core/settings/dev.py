@@ -2,6 +2,7 @@
 Development Django settings for KKEVO project.
 """
 from .base import *
+from decouple import config
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -29,8 +30,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Static files
 STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
-# Debug toolbar
+# Debug toolbar (only if installed)
 if DEBUG:
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-    INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
+    try:
+        import debug_toolbar
+        INSTALLED_APPS += ['debug_toolbar']
+        MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+        INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
+    except ImportError:
+        pass

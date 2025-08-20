@@ -14,6 +14,8 @@ class BlogPostSerializer(serializers.ModelSerializer):
     author_role = serializers.ReadOnlyField()
     author_avatar = serializers.ReadOnlyField()
     reading_time = serializers.ReadOnlyField()
+    views = serializers.ReadOnlyField(source='view_count')
+    likes = serializers.ReadOnlyField(source='like_count')
     
     class Meta:
         model = BlogPost
@@ -21,7 +23,7 @@ class BlogPostSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'summary', 'body', 'hero_image', 
             'hero_image_url', 'author', 'author_name', 'author_role', 
             'author_avatar', 'tags', 'status', 'published_at', 
-            'is_featured', 'reading_time', 'created_at', 'updated_at'
+            'is_featured', 'reading_time', 'views', 'likes', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 
@@ -33,14 +35,16 @@ class BlogPostListSerializer(serializers.ModelSerializer):
     author_name = serializers.ReadOnlyField()
     author_role = serializers.ReadOnlyField()
     reading_time = serializers.ReadOnlyField()
+    views = serializers.ReadOnlyField(source='view_count')
+    likes = serializers.ReadOnlyField(source='like_count')
     author = TeamMemberListSerializer(read_only=True)
     
     class Meta:
         model = BlogPost
         fields = [
-            'id', 'title', 'slug', 'summary', 'hero_image_url', 
+            'id', 'title', 'slug', 'summary', 'hero_image', 'hero_image_url', 
             'author', 'author_name', 'author_role', 'tags', 'status', 
-            'published_at', 'is_featured', 'reading_time'
+            'published_at', 'is_featured', 'reading_time', 'views', 'likes'
         ]
         read_only_fields = ['id', 'slug', 'status', 'published_at', 'is_featured']
 

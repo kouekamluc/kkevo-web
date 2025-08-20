@@ -21,19 +21,71 @@ class Portfolio(models.Model):
     client = models.CharField(max_length=100)
     year = models.CharField(max_length=4)
     
+    # Business Context & Problem Solving
+    challenge = models.TextField(
+        blank=True,
+        help_text="What business problems or challenges did the client face?"
+    )
+    solution = models.TextField(
+        blank=True,
+        help_text="How did we solve these challenges? What was our approach?"
+    )
+    
+    # Business Impact & ROI
+    business_objectives = models.JSONField(
+        default=list,
+        help_text="Business objectives as JSON array. Example: ['Increase Revenue', 'Improve Efficiency']"
+    )
+    roi_metrics = models.JSONField(
+        default=dict,
+        help_text="ROI metrics as JSON. Example: {'revenue': '+150%', 'users': '+200%', 'efficiency': '+300%'}"
+    )
+    key_results = models.JSONField(
+        default=list,
+        help_text="Key results achieved as JSON array. Example: ['50% cost reduction', '3x faster processing']"
+    )
+    
+    # Project Details
+    budget_range = models.CharField(
+        max_length=50, 
+        blank=True,
+        help_text="Project budget range (e.g., '$50k - $100k')"
+    )
+    project_timeline = models.CharField(
+        max_length=50, 
+        blank=True,
+        help_text="Project timeline (e.g., '3-6 months')"
+    )
+    team_size = models.CharField(max_length=50, blank=True)
+    duration = models.CharField(max_length=50, blank=True)
+    
+    # Client Feedback & Testimonials
+    client_testimonial = models.TextField(
+        blank=True,
+        help_text="Direct client feedback about the project"
+    )
+    client_name = models.CharField(
+        max_length=100, 
+        blank=True,
+        help_text="Name of client contact for testimonial"
+    )
+    client_role = models.CharField(
+        max_length=100, 
+        blank=True,
+        help_text="Role of client contact (e.g., 'CTO', 'Product Manager')"
+    )
+    client_company = models.CharField(
+        max_length=100, 
+        blank=True,
+        help_text="Company name for testimonial attribution"
+    )
+    
     # Images
     hero_image = models.ImageField(upload_to='portfolio/', blank=True, null=True)
     gallery_images = models.JSONField(default=list, blank=True)
     
     # Technologies used
     technologies = models.JSONField(default=list)
-    
-    # Project details
-    duration = models.CharField(max_length=50, blank=True)
-    team_size = models.CharField(max_length=50, blank=True)
-    
-    # Results and metrics
-    results = models.JSONField(default=dict, blank=True)
     
     # External links
     live_url = models.URLField(blank=True)
@@ -78,3 +130,26 @@ class Portfolio(models.Model):
         """Estimate reading time for case study"""
         word_count = len(self.long_description.split())
         return max(1, round(word_count / 200))  # 200 words per minute
+    
+    @property
+    def display_roi(self):
+        """Return formatted ROI metrics for display"""
+        if not self.roi_metrics:
+            return "Contact us for details"
+        
+        # Format first few ROI metrics
+        formatted_metrics = []
+        for key, value in list(self.roi_metrics.items())[:3]:
+            formatted_metrics.append(f"{key.title()}: {value}")
+        
+        return ", ".join(formatted_metrics)
+    
+    @property
+    def has_business_impact(self):
+        """Check if project has business impact data"""
+        return bool(self.challenge and self.solution and self.roi_metrics)
+    
+    @property
+    def has_testimonial(self):
+        """Check if project has client testimonial"""
+        return bool(self.client_testimonial and self.client_name)

@@ -1,103 +1,77 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { gsap } from 'gsap';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, 
-  User, 
-  Clock, 
-  Tag, 
-  Share2, 
-  Twitter, 
-  Facebook, 
-  Linkedin, 
-  Copy, 
-  Check,
-  ArrowLeft,
-  BookOpen,
-  Eye,
-  Heart
+  Calendar, Clock, User, Tag, Share2, Heart, Bookmark, 
+  ArrowLeft, ArrowRight, Eye, MessageCircle, Twitter, 
+  Facebook, Linkedin, Copy, Check, ExternalLink, Star, BookOpen,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { blogApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
-import { AnimatedButton, AnimatedCard } from '@/components/ui';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import { AnimatedCard, AnimatedButton } from '@/components/ui';
 import { BlogPost } from '@/types';
 
-interface RelatedPost {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  hero_image: string;
-  author: {
-    name: string;
-    role: string;
-  };
-  published_at: string;
-  reading_time: number;
+interface BlogDetailPageProps {
+  params: { slug: string };
 }
 
-const relatedPosts: RelatedPost[] = [
-  {
-    id: '1',
-    title: 'The Future of Web Development: What to Expect in 2024',
-    slug: 'future-web-development-2024',
-    summary: 'Explore the latest trends and technologies that will shape web development in the coming year.',
-    hero_image: '/api/placeholder/400/200',
-    author: { name: 'Sarah Johnson', role: 'CTO' },
-    published_at: '2024-01-15',
-    reading_time: 8
-  },
-  {
-    id: '2',
-    title: 'Building Scalable Microservices with Docker and Kubernetes',
-    slug: 'scalable-microservices-docker-kubernetes',
-    summary: 'Learn how to design and implement scalable microservices architecture using modern container technologies.',
-    hero_image: '/api/placeholder/400/200',
-    author: { name: 'David Kim', role: 'DevOps Engineer' },
-    published_at: '2024-01-10',
-    reading_time: 12
-  },
-  {
-    id: '3',
-    title: 'AI-Powered Testing: Automating Quality Assurance',
-    slug: 'ai-powered-testing-automation',
-    summary: 'Discover how artificial intelligence is revolutionizing software testing and quality assurance processes.',
-    hero_image: '/api/placeholder/400/200',
-    author: { name: 'Emily Watson', role: 'QA Engineer' },
-    published_at: '2024-01-05',
-    reading_time: 10
-  }
-];
-
-export default function BlogDetailPage() {
-  const params = useParams();
+export default function BlogDetailPage({ params }: BlogDetailPageProps) {
+  const router = useRouter();
   const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(42);
-  
-  const contentRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll();
-  
-  // Reading progress bar
-  const readingProgress = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Fetch blog post data
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await blogApi.getBySlug(params.slug as string);
-        setPost(response.data);
+        setIsLoading(true);
+        setError(null);
+        
+        const [postResponse, relatedResponse] = await Promise.all([
+          blogApi.getBySlug(params.slug),
+          blogApi.getByCategory('') // Will be updated with actual category
+        ]);
+        
+        if (postResponse.data) {
+          const postData = postResponse.data;
+          setPost(postData);
+          setLikeCount(postData.likes || 0);
+          
+          // Fetch related posts based on category and tags
+          if (postData.category || postData.tags?.length > 0) {
+            try {
+              const relatedQuery = postData.category || postData.tags[0];
+              const relatedResponse = await blogApi.getByCategory(relatedQuery);
+              const related = relatedResponse.data.results || relatedResponse.data || [];
+              
+              // Filter out current post and limit to 3
+              const filtered = related
+                .filter((p: BlogPost) => p.slug !== params.slug)
+                .slice(0, 3);
+              
+              setRelatedPosts(filtered);
+            } catch (error) {
+              console.warn('Could not fetch related posts:', error);
+            }
+          }
+        } else {
+          setError('Blog post not found');
+        }
       } catch (error) {
         console.error('Error fetching blog post:', error);
-        setError('Blog post not found');
+        setError('Failed to load blog post. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -108,38 +82,28 @@ export default function BlogDetailPage() {
     }
   }, [params.slug]);
 
-  // GSAP animations for content elements
-  useEffect(() => {
-    if (!contentRef.current || !post) return;
+  // Handle like
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+  };
 
-    const tl = gsap.timeline({ scrollTrigger: { trigger: contentRef.current, start: 'top center' } });
+  // Handle bookmark
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+  };
+
+  // Handle share
+  const handleShare = (platform: string) => {
+    if (!post) return;
     
-    tl.fromTo('.blog-content h2', 
-      { opacity: 0, y: 30 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }
-    )
-    .fromTo('.blog-content p', 
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.05 }
-    )
-    .fromTo('.blog-content ul, .blog-content ol', 
-      { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.5, stagger: 0.1 }
-    );
-
-    return () => {
-      tl.kill();
-    };
-  }, [post]);
-
-  const handleShare = async (platform: string) => {
-    const url = typeof window !== 'undefined' ? window.location.href : '';
-    const title = post?.title || '';
-    const text = post?.summary || '';
-
+    const url = `${window.location.origin}/blog/${post.slug}`;
+    const title = post.title;
+    const text = post.summary;
+    
     switch (platform) {
       case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`);
         break;
       case 'facebook':
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
@@ -148,442 +112,385 @@ export default function BlogDetailPage() {
         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
         break;
       case 'copy':
-        try {
-          await navigator.clipboard.writeText(url);
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 2000);
-        } catch (err) {
-          console.error('Failed to copy URL:', err);
-        }
+        navigator.clipboard.writeText(url).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
         break;
     }
+    setShowShareMenu(false);
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+  // Utility functions
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
+  const getReadingTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.split(' ').length;
+    return Math.ceil(words / wordsPerMinute);
+  };
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
+            <p className="text-white text-xl mt-4">Loading blog post...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error || !post) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Blog Post Not Found
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The blog post you're looking for doesn't exist.
-          </p>
-          <Link
-            href="/blog"
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors inline-block"
-          >
-            Back to Blog
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="text-red-400 text-6xl mb-4">⚠️</div>
+            <h1 className="text-3xl font-bold text-white mb-4">
+              {error || 'Blog post not found'}
+            </h1>
+            <p className="text-gray-300 mb-8">
+              The blog post you're looking for doesn't exist or couldn't be loaded.
+            </p>
+            <div className="space-x-4">
+              <button
+                onClick={() => router.back()}
+                className="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Go Back
+              </button>
+              <Link
+                href="/blog"
+                className="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Browse All Posts
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 dark:bg-gray-800 z-50">
-        <motion.div
-          className="h-full bg-gradient-to-r from-indigo-500 to-violet-600"
-          style={{ width: `${readingProgress}%` }}
-        />
-      </div>
-
-      <main className="min-h-screen">
-        <Header />
-        
-        {/* Hero Section */}
-        <section className="pt-32 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-          {/* Background Elements */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-20 right-10 w-96 h-96 rounded-full border-2 border-indigo-200 dark:border-indigo-800"></div>
-            <div className="absolute bottom-20 left-10 w-64 h-64 rounded-full border-2 border-violet-200 dark:border-violet-800"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="container mx-auto px-4 py-16">
+        {/* Back Button */}
+        <FadeInSection>
+          <div className="mb-8">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Blog
+            </button>
           </div>
+        </FadeInSection>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <FadeInSection>
+        {/* Hero Section */}
+        <FadeInSection>
+          <div className="mb-12">
+            {/* Hero Image */}
+            {post.hero_image && (
+              <div className="relative h-96 md:h-[500px] rounded-2xl overflow-hidden mb-8">
+                <img
+                  src={post.hero_image_url || `/api/placeholder/800/400`}
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Featured Badge */}
+                {post.is_featured && (
+                  <div className="absolute top-6 left-6 px-3 py-2 bg-yellow-500 text-black text-sm font-medium rounded-full">
+                    <Star className="w-4 h-4 inline mr-1" />
+                    Featured
+                  </div>
+                )}
+                
+                {/* Category Badge */}
+                <div className="absolute top-6 right-6 px-3 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full">
+                  {post.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </div>
+              </div>
+            )}
+
+            {/* Post Header */}
+            <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-6">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                  {post.title}
+                </h1>
+                <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                  {post.summary}
+                </p>
+              </div>
+
+              {/* Meta Information */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 p-6 bg-white/5 border border-white/20 rounded-xl">
+                <div className="flex items-center gap-6 text-gray-300">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    }) : 'Not published'}
+                    <span>{formatDate(post.published_at)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {post.reading_time} min read
+                    <span>{post.reading_time || getReadingTime(post.body)} min read</span>
                   </div>
-                  {post.is_featured && (
-                    <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                      Featured
-                    </div>
-                  )}
-                </div>
-
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                  {post.title}
-                </h1>
-                
-                <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                  {post.summary}
-                </p>
-
-                {/* Author Info */}
-                <div className="flex items-center justify-center gap-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    {post.author.name.charAt(0)}
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    <span>{post.views || 0} views</span>
                   </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {post.author.name}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {post.author.role}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap justify-center gap-2 mb-8">
-                  {post.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200"
-                    >
-                      <Tag className="w-3 h-3 mr-1" />
-                      {tag}
-                    </span>
-                  ))}
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <AnimatedButton
-                    variant="primary"
-                    size="lg"
+                <div className="flex items-center gap-3">
+                  <button
                     onClick={handleLike}
-                    className="group"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      isLiked 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
                   >
-                    <Heart className={`w-5 h-5 mr-2 transition-colors ${isLiked ? 'text-red-500 fill-current' : ''}`} />
-                    {isLiked ? 'Liked' : 'Like'} ({likeCount})
-                  </AnimatedButton>
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    {likeCount}
+                  </button>
                   
-                  <AnimatedButton
-                    variant="outline"
-                    size="lg"
-                    onClick={() => handleShare('copy')}
+                  <button
+                    onClick={handleBookmark}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      isBookmarked 
+                        ? 'bg-indigo-500 text-white' 
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
                   >
-                    {isCopied ? <Check className="w-5 h-5 mr-2" /> : <Share2 className="w-5 h-5 mr-2" />}
-                    {isCopied ? 'Copied!' : 'Share'}
-                  </AnimatedButton>
-                </div>
-              </div>
-            </FadeInSection>
-          </div>
-        </section>
-
-        {/* Content Section */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-4 gap-8">
-              {/* Main Content */}
-              <div className="lg:col-span-3">
-                <div ref={contentRef} className="blog-content prose prose-lg dark:prose-invert max-w-none">
-                  {/* Hero Image */}
-                  <div className="mb-8">
-                    <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-64 md:h-96 rounded-xl flex items-center justify-center">
-                      <BookOpen className="w-24 h-24 text-white opacity-80" />
-                    </div>
-                  </div>
-
-                  {/* Blog Content */}
-                  <div className="space-y-6">
-                    <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {post.body}
-                    </p>
+                    <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                    {isBookmarked ? 'Saved' : 'Save'}
+                  </button>
+                  
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowShareMenu(!showShareMenu)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 text-gray-300 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </button>
                     
-                    {/* Sample content for demonstration */}
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8">
-                      Introduction to Modern Web Development
-                    </h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      In today's rapidly evolving digital landscape, web development has become more complex and sophisticated than ever before. 
-                      Developers need to master a wide range of technologies, from frontend frameworks to backend services, 
-                      while ensuring their applications are performant, accessible, and secure.
-                    </p>
-
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
-                      Key Technologies and Frameworks
-                    </h3>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                      <li>React and Next.js for frontend development</li>
-                      <li>Node.js and Django for backend services</li>
-                      <li>PostgreSQL and MongoDB for data storage</li>
-                      <li>Docker and Kubernetes for deployment</li>
-                    </ul>
-
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
-                      Best Practices for Performance
-                    </h3>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      Performance optimization is crucial for modern web applications. This includes:
-                    </p>
-                    <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                      <li>Code splitting and lazy loading</li>
-                      <li>Image optimization and compression</li>
-                      <li>Caching strategies and CDN usage</li>
-                      <li>Database query optimization</li>
-                    </ol>
-
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8">
-                      The Future of Web Development
-                    </h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      As we look toward the future, several trends are shaping the web development landscape:
-                    </p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                      <li>WebAssembly for near-native performance</li>
-                      <li>Progressive Web Apps (PWAs) for mobile-first experiences</li>
-                      <li>AI-powered development tools and automation</li>
-                      <li>Edge computing and serverless architectures</li>
-                    </ul>
-
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
-                      Code Example: Modern React Component
-                    </h3>
-                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-                      <pre className="text-sm">
-                        <code>{`import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-
-const ModernComponent = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/data');
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Component content */}
-    </motion.div>
-  );
-};
-
-export default ModernComponent;`}</code>
-                      </pre>
-                    </div>
-
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8">
-                      Conclusion
-                    </h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      Modern web development requires a comprehensive understanding of both frontend and backend technologies, 
-                      along with a focus on performance, accessibility, and user experience. By staying current with the latest 
-                      trends and best practices, developers can create applications that not only meet today's requirements 
-                      but are also prepared for future challenges.
-                    </p>
+                    <AnimatePresence>
+                      {showShareMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="absolute right-0 top-full mt-2 w-48 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-2 z-50"
+                        >
+                          <button
+                            onClick={() => handleShare('twitter')}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <Twitter className="w-4 h-4" />
+                            Twitter
+                          </button>
+                          <button
+                            onClick={() => handleShare('facebook')}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <Facebook className="w-4 h-4" />
+                            Facebook
+                          </button>
+                          <button
+                            onClick={() => handleShare('linkedin')}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <Linkedin className="w-4 h-4" />
+                            LinkedIn
+                          </button>
+                          <button
+                            onClick={() => handleShare('copy')}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copied ? 'Copied!' : 'Copy Link'}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
 
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <div className="sticky top-24 space-y-6">
-                  {/* Share Section */}
-                  <AnimatedCard className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Share this post
-                    </h3>
-                    <div className="space-y-3">
-                      <button
-                        onClick={() => handleShare('twitter')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                      >
-                        <Twitter className="w-4 h-4" />
-                        Twitter
-                      </button>
-                      <button
-                        onClick={() => handleShare('facebook')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <Facebook className="w-4 h-4" />
-                        Facebook
-                      </button>
-                      <button
-                        onClick={() => handleShare('linkedin')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
-                      >
-                        <Linkedin className="w-4 h-4" />
-                        LinkedIn
-                      </button>
-                      <button
-                        onClick={() => handleShare('copy')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                      >
-                        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        {isCopied ? 'Copied!' : 'Copy Link'}
-                      </button>
-                    </div>
-                  </AnimatedCard>
-
-                  {/* Author Info */}
-                  <AnimatedCard className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      About the author
-                    </h3>
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+              {/* Author Information */}
+              {post.author && (
+                <div className="flex items-center gap-4 p-6 bg-white/5 border border-white/20 rounded-xl mb-8">
+                  {post.author.avatar ? (
+                    <img
+                      src={post.author.avatar}
+                      alt={post.author.name}
+                      className="w-16 h-16 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-2xl font-medium">
                         {post.author.name.charAt(0)}
-                      </div>
-                      <div className="font-semibold text-gray-900 dark:text-white mb-1">
-                        {post.author.name}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {post.author.role}
-                      </div>
+                      </span>
                     </div>
-                  </AnimatedCard>
-
-                  {/* Reading Stats */}
-                  <AnimatedCard className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Reading stats
+                  )}
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">
+                      {post.author.name}
                     </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Reading time</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{post.reading_time} min</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Published</span>
-                                                 <span className="font-semibold text-gray-900 dark:text-white">
-                           {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Not published'}
-                         </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Likes</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{likeCount}</span>
-                      </div>
-                    </div>
-                  </AnimatedCard>
+                    <p className="text-gray-300 mb-2">
+                      {post.author.role}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Published on {formatDate(post.published_at)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
-        </section>
+        </FadeInSection>
+
+        {/* Blog Content */}
+        <FadeInSection>
+          <div className="max-w-4xl mx-auto mb-16">
+            <div className="prose prose-lg prose-invert max-w-none">
+              <div 
+                className="text-gray-300 leading-relaxed text-lg"
+                dangerouslySetInnerHTML={{ __html: post.body }}
+              />
+            </div>
+          </div>
+        </FadeInSection>
+
+        {/* Tags */}
+        {post.tags && post.tags.length > 0 && (
+          <FadeInSection>
+            <div className="max-w-4xl mx-auto mb-16">
+              <div className="flex flex-wrap gap-3 justify-center">
+                {post.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/blog?tag=${encodeURIComponent(tag)}`}
+                    className="px-4 py-2 bg-white/10 text-gray-300 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </FadeInSection>
+        )}
 
         {/* Related Posts */}
-        <section className="py-16 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <FadeInSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                  Related Posts
-                </h2>
-                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                  Continue reading with these related articles
-                </p>
+        {relatedPosts.length > 0 && (
+          <FadeInSection>
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold text-white text-center mb-12">
+                Related Posts
+              </h2>
+              <StaggerList>
+                <div className="grid md:grid-cols-3 gap-8">
+                  {relatedPosts.map((relatedPost, index) => (
+                    <motion.div
+                      key={relatedPost.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                    >
+                      <Link href={`/blog/${relatedPost.slug}`}>
+                        <AnimatedCard className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group">
+                          {/* Hero Image */}
+                          <div className="relative">
+                            {relatedPost.hero_image ? (
+                              <div className="h-48 rounded-t-xl overflow-hidden">
+                                <img
+                                  src={relatedPost.hero_image_url || `/api/placeholder/400/200`}
+                                  alt={relatedPost.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              </div>
+                            ) : (
+                              <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-48 rounded-t-xl flex items-center justify-center">
+                                <div className="text-white text-center">
+                                  <div className="text-4xl mb-2">📝</div>
+                                  <div className="text-sm">No Image</div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Featured Badge */}
+                            {relatedPost.is_featured && (
+                              <div className="absolute top-4 left-4 px-2 py-1 bg-yellow-500 text-black text-xs font-medium rounded">
+                                Featured
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="p-6">
+                            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors line-clamp-2">
+                              {relatedPost.title}
+                            </h3>
+                            <p className="text-gray-300 mb-4 line-clamp-3">
+                              {relatedPost.summary}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-gray-400">
+                              <Calendar className="w-4 h-4" />
+                              {formatDate(relatedPost.published_at)}
+                            </div>
+                          </div>
+                        </AnimatedCard>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </StaggerList>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Newsletter Signup */}
+        <FadeInSection>
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="bg-white/5 border border-white/20 rounded-2xl p-12">
+              <h3 className="text-3xl font-bold text-white mb-4">
+                Stay Updated
+              </h3>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+                Get the latest insights, tutorials, and industry news delivered to your inbox. 
+                No spam, just valuable content.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <button className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                  Subscribe
+                </button>
               </div>
-            </FadeInSection>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {relatedPosts.map((relatedPost, index) => (
-                <Link href={`/blog/${relatedPost.slug}`} key={relatedPost.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="group cursor-pointer"
-                  >
-                    <AnimatedCard className="h-full">
-                    <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-48 rounded-t-xl flex items-center justify-center">
-                      <BookOpen className="w-16 h-16 text-white opacity-80" />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {relatedPost.title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                        {relatedPost.summary}
-                      </p>
-                      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                        <span>{relatedPost.author.name}</span>
-                        <span>{relatedPost.reading_time} min read</span>
-                      </div>
-                    </div>
-                  </AnimatedCard>
-                </motion.div>
-                </Link>
-              ))}
             </div>
           </div>
-        </section>
-
-        {/* Back to Blog CTA */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <FadeInSection>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                Enjoyed this article?
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-                Explore more insights and tutorials in our blog
-              </p>
-              <Link href="/blog" className="inline-block">
-                <AnimatedButton
-                  variant="primary"
-                  size="lg"
-                >
-                  <ArrowLeft className="w-5 h-5 mr-2" />
-                  Back to Blog
-                </AnimatedButton>
-              </Link>
-            </FadeInSection>
-          </div>
-        </section>
-
-        <Footer />
-      </main>
-    </>
+        </FadeInSection>
+      </div>
+    </div>
   );
 }

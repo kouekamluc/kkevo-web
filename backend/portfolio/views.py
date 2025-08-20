@@ -42,7 +42,15 @@ class PortfolioViewSet(viewsets.ReadOnlyModelViewSet):
             featured_bool = featured.lower() == 'true'
             queryset = queryset.filter(is_featured=featured_bool)
         
-        # Limit results if specified
+        # Apply ordering BEFORE any slicing
+        ordering = self.request.query_params.get('ordering', None)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        else:
+            # Use default ordering
+            queryset = queryset.order_by('order', '-created_at')
+        
+        # Limit results if specified (apply AFTER ordering)
         limit = self.request.query_params.get('limit', None)
         if limit:
             try:

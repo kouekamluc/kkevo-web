@@ -11,6 +11,7 @@ from testimonials.views import TestimonialViewSet
 from contact.views import ContactSubmissionViewSet
 from blog.views import BlogPostViewSet
 from portfolio.views import PortfolioViewSet
+from . import views
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -22,6 +23,9 @@ router.register(r'contact', ContactSubmissionViewSet)
 app_name = 'api'
 
 urlpatterns = [
+    # Health check endpoint
+    path('healthz/', views.health_check, name='health-check'),
+    
     # Services with slug-based lookups
     path('services/', ServiceViewSet.as_view({'get': 'list'}), name='service-list'),
     path('services/<slug:slug>/', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),

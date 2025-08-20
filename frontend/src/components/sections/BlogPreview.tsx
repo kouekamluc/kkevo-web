@@ -24,6 +24,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
       summary: 'Exploring the latest trends and technologies shaping the future of web development.',
       body: 'Web development continues to evolve rapidly...',
       slug: 'future-web-development-2024',
+      category: 'Web Development',
       tags: ['Web Development', 'React', 'Next.js', 'Trends'],
       status: 'published',
       is_featured: true,
@@ -44,6 +45,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
       summary: 'Learn how to design and implement scalable microservices using modern technologies.',
       body: 'Microservices architecture has become the standard...',
       slug: 'scalable-microservices-architecture',
+      category: 'Architecture',
       tags: ['Microservices', 'Docker', 'Kubernetes', 'Architecture'],
       status: 'published',
       is_featured: false,
@@ -64,6 +66,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
       summary: 'Discover how artificial intelligence is revolutionizing software testing processes.',
       body: 'Quality assurance is undergoing a transformation...',
       slug: 'ai-powered-testing-future-qa',
+      category: 'AI & Testing',
       tags: ['AI', 'Testing', 'QA', 'Automation'],
       status: 'published',
       is_featured: false,
@@ -84,7 +87,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await blogApi.getAll({ limit: 3, ordering: '-published_at' });
+        const response = await blogApi.getAll({ limit: 3, ordering: '-created_at' });
         const livePosts = response.data.results || response.data;
         setPosts(livePosts.length > 0 ? livePosts : fallbackPosts);
       } catch (error) {
@@ -196,21 +199,27 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
               <AnimatedCard className="h-full hover:shadow-xl transition-shadow duration-300">
                 {/* Hero Image */}
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-48 rounded-t-xl flex items-center justify-center">
-                    <BookOpen className="w-16 h-16 text-white opacity-80" />
-                  </div>
-                  
-                  {/* Featured Badge */}
+                  {post.hero_image ? (
+                    <div className="h-48 rounded-t-xl overflow-hidden">
+                      <img
+                        src={post.hero_image_url || `http://localhost:8081/media/${post.hero_image}`}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-gradient-to-br from-indigo-500 to-violet-600 h-48 rounded-t-xl flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <div className="text-4xl mb-2">📝</div>
+                        <div className="text-sm">No Image</div>
+                      </div>
+                    </div>
+                  )}
                   {post.is_featured && (
                     <div className="absolute top-4 left-4 px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded">
                       Featured
                     </div>
                   )}
-                  
-                  {/* Reading Time */}
-                  <div className="absolute top-4 right-4 px-2 py-1 bg-black/20 backdrop-blur-sm text-white text-xs rounded">
-                    {post.reading_time} min read
-                  </div>
                 </div>
 
                 {/* Content */}

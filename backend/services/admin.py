@@ -11,20 +11,31 @@ class ServiceAdmin(admin.ModelAdmin):
     """Admin configuration for Service model."""
     
     list_display = [
-        'title', 'category', 'order', 'is_active', 'created_at', 'icon_preview'
+        'title', 'category', 'order', 'is_active', 'is_featured', 'min_budget', 'max_budget', 'created_at', 'icon_preview'
     ]
-    list_filter = ['category', 'is_active', 'created_at']
+    list_filter = ['category', 'is_active', 'is_featured', 'created_at']
     search_fields = ['title', 'short_desc', 'long_desc']
-    list_editable = ['order', 'is_active']
+    list_editable = ['order', 'is_active', 'is_featured']
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ['id', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'slug', 'category', 'order', 'is_active')
+            'fields': ('title', 'slug', 'category', 'order', 'is_active', 'is_featured')
         }),
         ('Content', {
             'fields': ('short_desc', 'long_desc', 'icon')
+        }),
+        ('Business Logic', {
+            'fields': (
+                'pricing_tiers', 'timeline_estimates', 'budget_ranges',
+                'min_budget', 'max_budget', 'complexity_levels', 'deliverables'
+            ),
+            'description': 'Business-critical information for sales and pricing'
+        }),
+        ('Business Metrics', {
+            'fields': ('average_project_duration', 'success_rate'),
+            'description': 'Performance and success metrics'
         }),
         ('Features', {
             'fields': ('features',),

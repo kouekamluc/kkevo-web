@@ -64,12 +64,15 @@ export interface BlogPost {
     avatar?: string;
   };
   tags: string[];
+  category: string;
   status: 'draft' | 'published' | 'archived';
   published_at: string;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
   reading_time: number;
+  views?: number;
+  likes?: number;
 }
 
 export interface ContactSubmission {
