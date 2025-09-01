@@ -10,7 +10,7 @@ dev: ## Start all services in development mode
 	@echo "🚀 Development environment started!"
 	@echo "📱 Frontend: http://localhost:3000"
 	@echo "🔧 Backend: http://localhost:8081"
-	@echo "🗄️  Database: localhost:5432"
+	@echo "🗄️  Database: localhost:5432 (kkevo)"
 
 build: ## Build all Docker images
 	docker-compose build
@@ -65,12 +65,24 @@ install-deps: ## Install dependencies
 reset-db: ## Reset database and seed fresh data
 	docker-compose down -v
 	docker-compose up -d postgres
-	sleep 5
-	docker-compose up -d backend
-	sleep 10
+	@echo "⏳ Waiting for PostgreSQL to start..."
+	@sleep 10
 	docker-compose exec backend python manage.py migrate
 	docker-compose exec backend python manage.py seed_demo
-	@echo "🔄 Database reset complete!"
+	@echo "✅ Database reset complete!"
 
-status: ## Show service status
-	docker-compose ps
+local-dev: ## Start local development (without Docker)
+	@echo "🚀 Starting local development environment..."
+	@echo "📱 Frontend: http://localhost:3000"
+	@echo "🔧 Backend: http://localhost:8081"
+	@echo "🗄️  Database: localhost:5432 (kkevo)"
+	@echo ""
+	@echo "Make sure PostgreSQL is running with:"
+	@echo "  Database: kkevo"
+	@echo "  User: postgres"
+	@echo "  Password: kouekam"
+	@echo "  Port: 5432"
+	@echo ""
+	@echo "Then run:"
+	@echo "  cd backend && python manage.py runserver 8081"
+	@echo "  cd frontend && npm run dev"

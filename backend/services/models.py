@@ -25,6 +25,8 @@ class Service(models.Model):
     short_desc = models.TextField()
     long_desc = models.TextField()
     icon = models.CharField(max_length=255, blank=True, null=True, help_text="Icon filename or path")
+    image = models.ImageField(upload_to='services/', blank=True, null=True, help_text="Service image")
+    image_alt = models.CharField(max_length=255, blank=True, null=True, help_text="Alt text for service image")
     features = models.JSONField(default=list)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     
@@ -108,6 +110,13 @@ class Service(models.Model):
         """Return the full URL for the icon."""
         if self.icon:
             return f'/media/icons/{self.icon}'
+        return None
+    
+    @property
+    def image_url(self):
+        """Return the full URL for the service image."""
+        if self.image:
+            return self.image.url
         return None
     
     @property

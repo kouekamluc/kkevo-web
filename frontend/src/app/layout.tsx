@@ -5,10 +5,12 @@ import '@/styles/theme.css';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { CompanyConfigProvider } from '@/components/providers/CompanyConfigProvider';
+import { Auth0ProviderWrapper } from '@/lib/auth0';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { FloatingContactBubble } from '@/components/ui';
 import PrefetchControl from '@/components/providers/PrefetchControl';
+import { Auth0Debug } from '@/components/debug/Auth0Debug';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -82,20 +84,23 @@ export default function RootLayout({
           suppressHydrationWarning={true}
         />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider>
-          <SmoothScrollProvider>
-            <CompanyConfigProvider>
-              <PrefetchControl />
-              <Header />
-              <main className="min-h-screen pt-16 lg:pt-20">
-                {children}
-              </main>
-              <Footer />
-              <FloatingContactBubble />
-            </CompanyConfigProvider>
-          </SmoothScrollProvider>
-        </ThemeProvider>
+      <body className={inter.className} suppressHydrationWarning={true}>
+        <Auth0ProviderWrapper>
+          <ThemeProvider>
+            <SmoothScrollProvider>
+              <CompanyConfigProvider>
+                <PrefetchControl />
+                <Header />
+                <main className="min-h-screen pt-16 lg:pt-20">
+                  {children}
+                </main>
+                <Footer />
+                <FloatingContactBubble />
+                <Auth0Debug />
+              </CompanyConfigProvider>
+            </SmoothScrollProvider>
+          </ThemeProvider>
+        </Auth0ProviderWrapper>
       </body>
     </html>
   );

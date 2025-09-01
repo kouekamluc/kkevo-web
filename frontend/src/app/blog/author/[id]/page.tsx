@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Eye, Heart, ArrowLeft, Mail, Linkedin, Twitter, Globe } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { blogApi, teamApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
@@ -148,10 +149,12 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
           <div className="text-center mb-16">
             <div className="mb-8">
               {author.avatar ? (
-                <img
+                <Image
                   src={author.avatar}
                   alt={author.name}
-                  className="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white/20"
+                  width={128}
+                  height={128}
+                  className="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white/20 object-cover"
                 />
               ) : (
                 <div className="w-32 h-32 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white/20">
@@ -232,9 +235,9 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                   </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-white mb-2">
-                    {posts.reduce((total, post) => total + (post.views || 0), 0).toLocaleString()}
-                  </div>
+                                     <div className="text-3xl font-bold text-white mb-2">
+                     {posts.reduce((total, post) => total + (post.view_count || 0), 0).toLocaleString()}
+                   </div>
                   <div className="text-gray-400">
                     Total Views
                   </div>
@@ -287,12 +290,14 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                         <AnimatedCard className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group">
                           {/* Hero Image */}
                           <div className="relative">
-                            {post.hero_image ? (
-                              <div className="h-48 rounded-t-xl overflow-hidden">
-                                <img
-                                  src={post.hero_image_url || `/api/placeholder/400/200`}
+                            {post.featured_image ? (
+                              <div className="h-48 rounded-t-xl overflow-hidden relative">
+                                <Image
+                                  src={post.featured_image || `/api/placeholder/400/200`}
                                   alt={post.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                  className="object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
                               </div>
                             ) : (
@@ -313,7 +318,7 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                             
                             {/* Category Badge */}
                             <div className="absolute top-4 right-4 px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded">
-                              {post.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              {post.category?.name ? post.category.name.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized'}
                             </div>
                           </div>
 
@@ -325,9 +330,9 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
                                 <Calendar className="w-4 h-4" />
                                 {formatDate(post.published_at)}
                               </div>
-                              <div className="flex items-center gap-1">
+                                                            <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                {post.reading_time || getReadingTime(post.body)} min read
+                                 {post.estimated_reading_time || getReadingTime(post.body)} min read
                               </div>
                             </div>
 
@@ -338,7 +343,7 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
 
                             {/* Summary */}
                             <p className="text-gray-300 mb-4 line-clamp-3">
-                              {post.summary}
+                              {post.excerpt}
                             </p>
 
                             {/* Tags */}
@@ -362,14 +367,14 @@ export default function BlogAuthorPage({ params }: BlogAuthorPageProps) {
 
                             {/* Stats */}
                             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10">
-                              <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                <Eye className="w-4 h-4" />
-                                {post.views || 0}
-                              </div>
-                              <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                <Heart className="w-4 h-4" />
-                                {post.likes || 0}
-                              </div>
+                                                             <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                 <Eye className="w-4 h-4" />
+                                 {post.view_count || 0}
+                               </div>
+                               <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                 <Heart className="w-4 h-4" />
+                                 {post.like_count || 0}
+                               </div>
                             </div>
                           </div>
                         </AnimatedCard>

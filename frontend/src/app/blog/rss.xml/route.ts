@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     ${posts.map((post: any) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
-      <description><![CDATA[${post.summary}]]></description>
+      <description><![CDATA[${post.excerpt}]]></description>
       <link>${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/blog/${post.slug}</link>
       <guid>${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/blog/${post.slug}</guid>
       <pubDate>${new Date(post.published_at).toUTCString()}</pubDate>

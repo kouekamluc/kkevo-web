@@ -9,10 +9,11 @@ from services.views import ServiceViewSet, CompanyStatsViewSet, CompanyConfigVie
 from team.views import TeamMemberViewSet
 from testimonials.views import TestimonialViewSet
 from contact.views import ContactSubmissionViewSet
-from blog.views import BlogPostViewSet
+# from authentication.test_auth import auth_test_public, auth_test_protected, auth_test_admin
 from portfolio.views import PortfolioViewSet
 from lead_magnets.views import LeadMagnetSubmissionViewSet
 from case_studies.views import CaseStudyViewSet
+from resources.views import ResourceViewSet, ResourceCategoryViewSet, ResourceTypeViewSet
 from . import views
 
 # Create router and register viewsets
@@ -30,13 +31,17 @@ urlpatterns = [
     # Health check endpoint
     path('healthz/', views.health_check, name='health-check'),
     
+    # Auth0 test endpoints
+    path('auth/test/public/', views.auth_test_public, name='auth-test-public'),
+    path('auth/test/protected/', views.auth_test_protected, name='auth-test-protected'),
+    path('auth/test/admin/', views.auth_test_admin, name='auth-test-admin'),
+    
     # Services with slug-based lookups
     path('services/', ServiceViewSet.as_view({'get': 'list'}), name='service-list'),
     path('services/<slug:slug>/', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
     
-    # Blog posts with slug-based lookups
-    path('blog/', BlogPostViewSet.as_view({'get': 'list'}), name='blogpost-list'),
-    path('blog/<slug:slug>/', BlogPostViewSet.as_view({'get': 'retrieve'}), name='blogpost-detail'),
+    # Include new blog URLs
+    path('blog/', include('blog.urls')),
     
     # Portfolio items with slug-based lookups
     path('portfolio/', PortfolioViewSet.as_view({'get': 'list'}), name='portfolio-list'),
@@ -45,6 +50,10 @@ urlpatterns = [
     # Case studies with slug-based lookups
     path('case-studies/', CaseStudyViewSet.as_view({'get': 'list'}), name='case-study-list'),
     path('case-studies/<slug:slug>/', CaseStudyViewSet.as_view({'get': 'retrieve'}), name='case-study-detail'),
+    
+    # Resources with slug-based lookups
+    path('resources/', ResourceViewSet.as_view({'get': 'list'}), name='resource-list'),
+    path('resources/<slug:slug>/', ResourceViewSet.as_view({'get': 'retrieve'}), name='resource-detail'),
     
     # Include router for other endpoints
     path('', include(router.urls)),

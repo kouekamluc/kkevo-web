@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Calendar, Clock, ArrowRight, ChevronLeft, ChevronRight, Star, Eye, Heart, BookOpen, Filter, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { blogApi } from '@/lib/api';
 import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedCard, AnimatedButton, KkevoLogo } from '@/components/ui';
@@ -91,7 +92,7 @@ export default function BlogPageClient() {
     if (searchTerm) {
       filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.summary?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
@@ -109,7 +110,7 @@ export default function BlogPageClient() {
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(post => post.category === selectedCategory);
+      filtered = filtered.filter(post => post.category?.slug === selectedCategory);
     }
 
     return filtered;
@@ -271,10 +272,12 @@ export default function BlogPageClient() {
                       {featuredPosts[currentCarouselIndex] && (
                         <div className="relative h-96 md:h-[500px]">
                           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10" />
-                          <img
-                            src={featuredPosts[currentCarouselIndex].hero_image_url || '/api/placeholder/800/400'}
+                          <Image
+                            src={featuredPosts[currentCarouselIndex].featured_image || '/api/placeholder/800/400'}
                             alt={featuredPosts[currentCarouselIndex].title}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 800px"
+                            className="object-cover"
                           />
                           <div className="absolute inset-0 flex items-end z-20 p-8">
                             <div className="text-white">
@@ -290,7 +293,7 @@ export default function BlogPageClient() {
                                 {featuredPosts[currentCarouselIndex].title}
                               </h3>
                               <p className="text-lg opacity-90 mb-4 max-w-2xl">
-                                {featuredPosts[currentCarouselIndex].summary}
+                                {featuredPosts[currentCarouselIndex].excerpt}
                               </p>
                               <Link
                                 href={`/blog/${featuredPosts[currentCarouselIndex].slug}`}
@@ -478,12 +481,13 @@ export default function BlogPageClient() {
                         <AnimatedCard className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group">
                           {/* Hero Image */}
                           <div className="relative">
-                            {post.hero_image ? (
-                              <div className="h-48 rounded-t-xl overflow-hidden">
-                                <img
-                                  src={post.hero_image_url || `/api/placeholder/400/200`}
+                            {post.featured_image ? (
+                              <div className="h-48 rounded-t-xl overflow-hidden relative">
+                                <Image
+                                  src={post.featured_image || `/api/placeholder/400/200`}
                                   alt={post.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  fill
+                                  className="object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
                               </div>
                             ) : (
@@ -505,7 +509,7 @@ export default function BlogPageClient() {
                             {/* Category Badge */}
                             {post.category && (
                               <div className="absolute top-4 right-4 px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded">
-                                {post.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                {post.category.name ? post.category.name.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized'}
                               </div>
                             )}
                           </div>
@@ -520,7 +524,7 @@ export default function BlogPageClient() {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                {post.reading_time || getReadingTime(post.body)} min read
+                                {post.estimated_reading_time || getReadingTime(post.body)} min read
                               </div>
                             </div>
 
@@ -531,7 +535,7 @@ export default function BlogPageClient() {
 
                             {/* Summary */}
                             <p className="text-gray-300 mb-4 line-clamp-3">
-                              {post.summary}
+                              {post.excerpt}
                             </p>
 
                             {/* Tags */}
@@ -557,10 +561,12 @@ export default function BlogPageClient() {
                             {post.author && (
                               <div className="flex items-center gap-3">
                                 {post.author.avatar ? (
-                                  <img
+                                  <Image
                                     src={post.author.avatar}
                                     alt={post.author.name}
-                                    className="w-8 h-8 rounded-full"
+                                    width={32}
+                                    height={32}
+                                    className="w-8 h-8 rounded-full object-cover"
                                   />
                                 ) : (
                                   <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
@@ -584,11 +590,11 @@ export default function BlogPageClient() {
                             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10">
                               <div className="flex items-center gap-1 text-gray-400 text-sm">
                                 <Eye className="w-4 h-4" />
-                                {post.views || 0}
+                                {post.view_count || 0}
                               </div>
-                              <div className="flex items-center gap-1 text-gray-400 text-sm">
+                              <div className="flex items-center gap-1 text-sm">
                                 <Heart className="w-4 h-4" />
-                                {post.likes || 0}
+                                {post.like_count || 0}
                               </div>
                             </div>
                           </div>

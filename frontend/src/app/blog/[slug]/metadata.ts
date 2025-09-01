@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const post = await response.json();
     return generateDynamicMeta('blog', {
       title: post.title,
-      description: post.summary,
+      description: post.excerpt,
       slug: post.slug,
     });
   } catch (error) {

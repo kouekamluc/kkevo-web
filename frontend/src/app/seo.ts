@@ -112,6 +112,20 @@ export const commonMeta = {
     keywords: ['contact', 'consultation', 'get quote', 'start project', 'free consultation'],
     url: '/contact',
   }),
+  
+  resources: generateMeta({
+    title: 'Free Resources',
+    description: 'Access our comprehensive library of guides, templates, tools, and resources to accelerate your software development projects and business growth.',
+    keywords: ['resources', 'guides', 'templates', 'tools', 'downloads', 'free resources'],
+    url: '/resources',
+  }),
+  
+  admin: generateMeta({
+    title: 'Admin Dashboard',
+    description: 'Administrative dashboard for managing KKEVO content and settings',
+    keywords: ['admin', 'dashboard', 'management', 'content management'],
+    url: '/admin',
+  }),
 };
 
 // Helper for dynamic pages

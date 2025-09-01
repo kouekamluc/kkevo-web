@@ -49,6 +49,7 @@ const CaseStudyCarousel = () => {
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       published_at: '2024-01-01T00:00:00Z',
+      gallery_images: ['/api/placeholder/800/600', '/api/placeholder/800/600'],
       slug: 'ecommerce-platform'
     },
     {
@@ -80,6 +81,7 @@ const CaseStudyCarousel = () => {
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       published_at: '2024-01-01T00:00:00Z',
+      gallery_images: ['/api/placeholder/800/600', '/api/placeholder/800/600'],
       slug: 'ai-analytics'
     },
     {
@@ -111,6 +113,7 @@ const CaseStudyCarousel = () => {
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       published_at: '2024-01-01T00:00:00Z',
+      gallery_images: ['/api/placeholder/800/600', '/api/placeholder/800/600'],
       slug: 'mobile-banking'
     },
     {
@@ -142,6 +145,7 @@ const CaseStudyCarousel = () => {
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       published_at: '2024-01-01T00:00:00Z',
+      gallery_images: ['/api/placeholder/800/600', '/api/placeholder/800/600'],
       slug: 'cloud-migration'
     }
   ], []);

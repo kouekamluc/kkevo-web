@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { blogApi } from '@/lib/api';
 import { AnimatedCard, AnimatedButton } from '@/components/ui';
 import { BlogPost } from '@/types';
@@ -21,16 +22,23 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
     {
       id: '1',
       title: 'The Future of Web Development in 2024',
-      summary: 'Exploring the latest trends and technologies shaping the future of web development.',
+      excerpt: 'Exploring the latest trends and technologies shaping the future of web development.',
       body: 'Web development continues to evolve rapidly...',
+      order: 1,
       slug: 'future-web-development-2024',
-      category: 'Web Development',
+      category: { id: '1', name: 'Web Development', slug: 'web-development', color: 'bg-blue-500', description: 'Web development topics', order: 1, is_active: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
       tags: ['Web Development', 'React', 'Next.js', 'Trends'],
       status: 'published',
       is_featured: true,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 5,
+      estimated_reading_time: 5,
+      word_count: 1000,
+      view_count: 0,
+      like_count: 0,
+      bookmark_count: 0,
+      share_count: 0,
+      comment_count: 0,
       published_at: '2024-01-01T00:00:00Z',
       author: {
         id: '1',
@@ -42,16 +50,23 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
     {
       id: '2',
       title: 'Building Scalable Microservices Architecture',
-      summary: 'Learn how to design and implement scalable microservices using modern technologies.',
+      excerpt: 'Learn how to design and implement scalable microservices using modern technologies.',
       body: 'Microservices architecture has become the standard...',
+      order: 2,
       slug: 'scalable-microservices-architecture',
-      category: 'Architecture',
+      category: { id: '2', name: 'Architecture', slug: 'architecture', color: 'bg-green-500', description: 'Architecture topics', order: 2, is_active: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
       tags: ['Microservices', 'Docker', 'Kubernetes', 'Architecture'],
       status: 'published',
       is_featured: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 8,
+      estimated_reading_time: 8,
+      word_count: 1600,
+      view_count: 0,
+      like_count: 0,
+      bookmark_count: 0,
+      share_count: 0,
+      comment_count: 0,
       published_at: '2024-01-01T00:00:00Z',
       author: {
         id: '2',
@@ -63,16 +78,23 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
     {
       id: '3',
       title: 'AI-Powered Testing: The Future of QA',
-      summary: 'Discover how artificial intelligence is revolutionizing software testing processes.',
+      excerpt: 'Discover how artificial intelligence is revolutionizing software testing processes.',
       body: 'Quality assurance is undergoing a transformation...',
+      order: 3,
       slug: 'ai-powered-testing-future-qa',
-      category: 'AI & Testing',
+      category: { id: '3', name: 'AI & Testing', slug: 'ai-testing', color: 'bg-red-500', description: 'AI and testing topics', order: 3, is_active: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
       tags: ['AI', 'Testing', 'QA', 'Automation'],
       status: 'published',
       is_featured: false,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      reading_time: 6,
+      estimated_reading_time: 6,
+      word_count: 1200,
+      view_count: 0,
+      like_count: 0,
+      bookmark_count: 0,
+      share_count: 0,
+      comment_count: 0,
       published_at: '2024-01-01T00:00:00Z',
       author: {
         id: '3',
@@ -199,12 +221,14 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
               <AnimatedCard className="h-full hover:shadow-xl transition-shadow duration-300">
                 {/* Hero Image */}
                 <div className="relative">
-                  {post.hero_image ? (
-                    <div className="h-48 rounded-t-xl overflow-hidden">
-                      <img
-                        src={post.hero_image_url || `http://localhost:8081/media/${post.hero_image}`}
+                  {post.featured_image ? (
+                    <div className="h-48 rounded-t-xl overflow-hidden relative">
+                      <Image
+                        src={post.featured_image || `/api/placeholder/400/200`}
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   ) : (
@@ -232,7 +256,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {post.reading_time} min read
+                      {post.estimated_reading_time} min read
                     </div>
                   </div>
                   
@@ -243,7 +267,7 @@ const BlogPreview = ({ blogPosts = [] }: BlogPreviewProps) => {
                   
                   {/* Summary */}
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-                    {post.summary}
+                    {post.excerpt}
                   </p>
                   
                   {/* Tags */}

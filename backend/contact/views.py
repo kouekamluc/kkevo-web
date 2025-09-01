@@ -21,10 +21,10 @@ from .serializers import (
 
 class ContactSubmissionViewSet(viewsets.ModelViewSet):
     """ViewSet for ContactSubmission model."""
-
+    
     queryset = ContactSubmission.objects.all()
     permission_classes = [AllowAny]
-
+    
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
         if self.action == 'create':
@@ -34,7 +34,7 @@ class ContactSubmissionViewSet(viewsets.ModelViewSet):
         elif self.action == 'list':
             return ContactSubmissionListSerializer
         return ContactSubmissionSerializer
-
+    
     def create(self, request, *args, **kwargs):
         """Create a new contact submission."""
         serializer = self.get_serializer(data=request.data)
@@ -130,7 +130,7 @@ class ContactSubmissionViewSet(viewsets.ModelViewSet):
                 'success': False,
                 'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
-
+    
     @action(detail=True, methods=['post'])
     def update_lead_score(self, request, pk=None):
         """Manually update the lead score."""
@@ -346,7 +346,7 @@ class ContactSubmissionViewSet(viewsets.ModelViewSet):
                 'success': False,
                 'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
-
+    
     @action(detail=False, methods=['get'])
     def needs_follow_up(self, request):
         """Get leads that need follow-up."""

@@ -22,6 +22,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     """Serializer for Service model."""
     
     icon_url = serializers.ReadOnlyField()
+    image_url = serializers.ReadOnlyField()
     display_budget_range = serializers.ReadOnlyField()
     display_timeline = serializers.ReadOnlyField()
     
@@ -29,7 +30,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = [
             'id', 'title', 'slug', 'short_desc', 'long_desc', 
-            'icon', 'icon_url', 'features', 'category', 'order', 
+            'icon', 'icon_url', 'image', 'image_url', 'image_alt', 'features', 'category', 'order', 
             'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
@@ -39,6 +40,7 @@ class ServiceDetailSerializer(serializers.ModelSerializer):
     """Comprehensive serializer for Service detail view."""
     
     icon_url = serializers.ReadOnlyField()
+    image_url = serializers.ReadOnlyField()
     display_budget_range = serializers.ReadOnlyField()
     display_timeline = serializers.ReadOnlyField()
     
@@ -46,7 +48,7 @@ class ServiceDetailSerializer(serializers.ModelSerializer):
         model = Service
         fields = [
             'id', 'title', 'slug', 'short_desc', 'long_desc', 
-            'icon', 'icon_url', 'features', 'category', 'order', 
+            'icon', 'icon_url', 'image', 'image_url', 'image_alt', 'features', 'category', 'order', 
             'is_active', 'is_featured', 'created_at', 'updated_at',
             'pricing_tiers', 'timeline_estimates', 'budget_ranges',
             'min_budget', 'max_budget', 'complexity_levels', 'deliverables',
@@ -60,11 +62,12 @@ class ServiceListSerializer(serializers.ModelSerializer):
     """Simplified serializer for Service list view."""
     
     icon_url = serializers.ReadOnlyField()
+    image_url = serializers.ReadOnlyField()
     
     class Meta:
         model = Service
         fields = [
-            'id', 'title', 'slug', 'short_desc', 'icon_url', 
+            'id', 'title', 'slug', 'short_desc', 'icon_url', 'image_url', 'image_alt',
             'category', 'order', 'is_active'
         ]
         read_only_fields = ['id', 'slug', 'order', 'is_active']

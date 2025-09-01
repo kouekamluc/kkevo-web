@@ -67,14 +67,26 @@ export interface Testimonial {
   updated_at: string;
 }
 
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  description: string;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  summary: string;
+  excerpt: string;
   body: string;
-  hero_image?: string;
-  hero_image_url?: string;
+  featured_image?: string;
+  featured_image_url?: string;
   author: {
     id: string;
     name: string;
@@ -82,15 +94,27 @@ export interface BlogPost {
     avatar?: string;
   };
   tags: string[];
-  category: string;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+  } | null;
   status: 'draft' | 'published' | 'archived';
   published_at: string;
   is_featured: boolean;
+  order: number;
   created_at: string;
   updated_at: string;
-  reading_time: number;
-  views?: number;
-  likes?: number;
+  estimated_reading_time: number;
+  word_count: number;
+  view_count: number;
+  like_count: number;
+  bookmark_count: number;
+  share_count: number;
+  comment_count: number;
+  meta_title?: string;
+  meta_description?: string;
 }
 
 export interface ContactSubmission {
@@ -154,19 +178,42 @@ export interface Portfolio {
   title: string;
   slug: string;
   description: string;
-  long_description: string;
+  long_description?: string;
   category: string;
   client: string;
   year: string;
+  
+  // Business Context & Problem Solving
+  challenge?: string;
+  solution?: string;
+  
+  // Business Impact & ROI
+  business_objectives?: string[];
+  roi_metrics?: Record<string, string>;
+  key_results?: string[];
+  results: Record<string, string>;
+  
+  // Project Details
+  budget_range?: string;
+  project_timeline?: string;
+  team_size: string;
+  duration: string;
+  
+  // Client Feedback & Testimonials
+  client_testimonial?: string;
+  client_name?: string;
+  client_role?: string;
+  client_company?: string;
+  
+  // Media & Links
   hero_image?: string;
   gallery_images: string[];
   technologies: string[];
-  duration: string;
-  team_size: string;
-  results: Record<string, string>;
   live_url?: string;
   github_url?: string;
   case_study_url?: string;
+  
+  // Status & Organization
   is_featured: boolean;
   order: number;
   status: 'draft' | 'published' | 'archived';
@@ -314,4 +361,85 @@ export interface LeadMagnetSubmission {
   status: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ResourceCategory {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  description: string;
+  order: number;
+  is_active: boolean;
+}
+
+export interface ResourceType {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+  description: string;
+  order: number;
+  is_active: boolean;
+}
+
+export interface Resource {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  long_description?: string;
+  type: ResourceType;
+  category: ResourceCategory;
+  tags: string[];
+  file_size: string;
+  format: string;
+  estimated_time: string;
+  thumbnail?: string;
+  file?: string;
+  external_url?: string;
+  author: string;
+  is_featured: boolean;
+  is_premium: boolean;
+  order: number;
+  is_active: boolean;
+  download_count: number;
+  view_count: number;
+  rating: number;
+  rating_count: number;
+  created_at: string;
+  updated_at: string;
+  published_at: string;
+}
+
+export interface ResourceDownload {
+  id: number;
+  resource: number;
+  user?: number;
+  ip_address?: string;
+  user_agent: string;
+  referrer: string;
+  downloaded_at: string;
+}
+
+export interface ResourceRating {
+  id: number;
+  resource: number;
+  user?: number;
+  ip_address?: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResourceView {
+  id: number;
+  resource: number;
+  user?: number;
+  ip_address?: string;
+  user_agent: string;
+  referrer: string;
+  viewed_at: string;
 }

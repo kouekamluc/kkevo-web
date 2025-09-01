@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface CacheEntry<T> {
   data: T;
@@ -124,7 +124,7 @@ export const useDataCache = <T>(
   const { ttl, enabled = true, onSuccess, onError } = options;
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchData = async (forceRefresh = false) => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     // Check if prefetching is disabled globally
     if (typeof window !== 'undefined' && (window as any).__DISABLE_PREFETCH__) {
       console.log('Data fetching disabled due to prefetch control');
@@ -180,7 +180,7 @@ export const useDataCache = <T>(
         setIsLoading(false);
       }
     }
-  };
+  }, [key, ttl, onSuccess, onError, fetcher]);
 
   const refresh = () => fetchData(true);
   const clearCache = () => globalCache.delete(key);
@@ -195,7 +195,7 @@ export const useDataCache = <T>(
         abortControllerRef.current.abort();
       }
     };
-  }, [key, enabled, ttl, onSuccess, onError]);
+  }, [key, enabled, ttl, onSuccess, onError, fetchData]);
 
   // Cleanup on unmount
   useEffect(() => {

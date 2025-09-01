@@ -1,10 +1,19 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import (
+    ResourceViewSet, ResourceCategoryViewSet, ResourceTypeViewSet,
+    ResourceDownloadViewSet, ResourceRatingViewSet, ResourceViewViewSet
+)
 
-app_name = 'resources'
+router = DefaultRouter()
+router.register(r'resources', ResourceViewSet, basename='resource')
+router.register(r'categories', ResourceCategoryViewSet, basename='resource-category')
+router.register(r'types', ResourceTypeViewSet, basename='resource-type')
+router.register(r'downloads', ResourceDownloadViewSet, basename='resource-download')
+router.register(r'ratings', ResourceRatingViewSet, basename='resource-rating')
+router.register(r'views', ResourceViewViewSet, basename='resource-view')
 
 urlpatterns = [
-    path('django-saas-checklist/download/', views.DjangoSaasChecklistDownloadView.as_view(), name='django_saas_checklist_download'),
-    path('django-saas-checklist/download-fallback/', views.django_saas_checklist_download_fallback, name='django_saas_checklist_download_fallback'),
+    path('', include(router.urls)),
 ]
 

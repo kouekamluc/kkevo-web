@@ -3,6 +3,7 @@ Contact models for KKEVO.
 """
 import uuid
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -99,7 +100,7 @@ class ContactSubmission(models.Model):
     lead_score = models.PositiveIntegerField(default=0, help_text="Lead scoring from 0-100")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     assigned_to = models.ForeignKey(
-        'auth.User', 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,

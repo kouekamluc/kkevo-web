@@ -70,6 +70,22 @@ kkevo-web/
 - Docker & Docker Compose
 - Node.js 18+
 - Python 3.12+
+- Auth0 account (for authentication)
+
+### Authentication Setup
+**IMPORTANT**: This project uses Auth0 for authentication. Before running, you must:
+
+1. **Set up Auth0**: Follow the complete guide in `frontend/AUTH0_COMPLETE_SETUP.md`
+2. **Create environment files**: Set up `.env.local` (frontend) and `.env` (backend)
+3. **Configure permissions**: Set up admin roles and permissions in Auth0
+
+**Quick Auth0 Setup**:
+```bash
+# 1. Create Auth0 application and API
+# 2. Create .env.local in frontend/ directory
+# 3. Create .env in backend/ directory
+# 4. Follow detailed guide: frontend/AUTH0_COMPLETE_SETUP.md
+```
 
 ### One-liner setup
 ```bash

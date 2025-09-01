@@ -2,8 +2,23 @@
 Base Django settings for KKEVO project.
 """
 import os
+import sys
 from pathlib import Path
 from decouple import config
+
+# Fix for Windows XML module issue with Django autoreloader
+if sys.platform == 'win32':
+    try:
+        import xml.etree.ElementTree
+    except ImportError:
+        # Create a dummy module to prevent Django autoreloader from crashing
+        import types
+        xml_module = types.ModuleType('xml')
+        xml_module.etree = types.ModuleType('xml.etree')
+        xml_module.etree.ElementTree = types.ModuleType('xml.etree.ElementTree')
+        sys.modules['xml'] = xml_module
+        sys.modules['xml.etree'] = xml_module.etree
+        sys.modules['xml.etree.ElementTree'] = xml_module.etree.ElementTree
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -31,6 +46,8 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    'core',
+    'authentication',  # Enabled for simplified Auth0 authentication
     'services',
     'team',
     'testimonials',
@@ -47,7 +64,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',  # Commented out due to compatibility issues
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,8 +96,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='kkevo'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='kouekam'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 
@@ -120,12 +141,16 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'core.User'
+
 # Site ID
 SITE_ID = 1
 
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'authentication.simple_auth0.SimpleAuth0Authentication',  # Simplified Auth0 authentication
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -144,6 +169,18 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Auth0 Configuration
+AUTH0_DOMAIN = config('AUTH0_DOMAIN', default='')
+AUTH0_AUDIENCE = config('AUTH0_AUDIENCE', default='')
+AUTH0_CLIENT_ID = config('AUTH0_CLIENT_ID', default='')
+AUTH0_CLIENT_SECRET = config('AUTH0_CLIENT_SECRET', default='')
+
+# Custom Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'authentication.simple_auth0.SimpleAuth0Backend',  # Simplified Auth0 backend
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
@@ -158,8 +195,8 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# WhiteNoise settings
-STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
+# WhiteNoise settings - Commented out due to compatibility issues
+# STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # Logging
 LOGGING = {

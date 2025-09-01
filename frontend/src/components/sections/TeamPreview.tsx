@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Linkedin, Github, Twitter, ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 import { TeamMember } from '@/types';
 
 interface TeamPreviewProps {
@@ -119,12 +120,14 @@ const TeamPreview = ({ teamMembers = [] }: TeamPreviewProps) => {
                 
                 {/* Avatar */}
                 <div className="relative z-10 mb-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 text-white text-2xl font-bold">
+                  <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 text-white text-2xl font-bold overflow-hidden">
                     {member.avatar ? (
-                      <img 
+                      <Image 
                         src={member.avatar} 
                         alt={member.name}
-                        className="w-full h-full rounded-full object-cover"
+                        width={96}
+                        height={96}
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       member.name.charAt(0)

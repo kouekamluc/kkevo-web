@@ -9,7 +9,7 @@ import { FadeInSection, StaggerList } from '@/components/animations';
 import { AnimatedButton, KkevoLogo, PageLoader } from '@/components/ui';
 import Header from '@/components/layout/Header';
 
-import { useDataCache } from '@/hooks';
+
 import { Service } from '@/types';
 import { config } from '@/lib/config';
 
@@ -38,18 +38,33 @@ export default function ServicesPageClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('name');
 
-  // Use the new caching system
-  const { data: servicesResponse, isLoading, error } = useDataCache(
-    'services-list',
-    () => servicesApi.getAll(),
-    { 
-      ttl: 10 * 60 * 1000, // 10 minutes cache
-      enabled: config.prefetch.enabled && (typeof window === 'undefined' || !(window as any).__DISABLE_PREFETCH__)
-    }
-  );
+  // Direct API call to avoid cache issues
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch services on component mount
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await servicesApi.getAll();
+        const servicesData = response.data?.results || response.data || [];
+        setServices(Array.isArray(servicesData) ? servicesData : []);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+        setError('Failed to load services. Please try again.');
+        setServices([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   const filteredServices = useMemo(() => {
-    const services = servicesResponse?.data?.results || servicesResponse?.data || [];
     const base: Service[] = Array.isArray(services) ? services.slice() : [];
 
     let filtered = base;
@@ -96,7 +111,7 @@ export default function ServicesPageClient() {
     });
 
     return sorted;
-  }, [servicesResponse?.data, searchTerm, selectedCategory, selectedComplexity, sortBy]);
+  }, [services, searchTerm, selectedCategory, selectedComplexity, sortBy]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -165,6 +180,7 @@ export default function ServicesPageClient() {
     );
   }
 
+  // Show loading only if both cache and fallback are loading
   if (isLoading) {
     return <PageLoader message="Loading services..." size="lg" />;
   }
@@ -180,7 +196,7 @@ export default function ServicesPageClient() {
             Error Loading Services
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {error.message || 'Failed to load services. Please try again later.'}
+            {error || 'Failed to load services. Please try again later.'}
           </p>
           <button
             onClick={() => window.location.reload()}
