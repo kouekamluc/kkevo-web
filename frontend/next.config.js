@@ -93,6 +93,25 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      // iStock and Getty Images
+      {
+        protocol: 'https',
+        hostname: 'media.istockphoto.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.gettyimages.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'thumbs.dreamstime.com',
+        port: '',
+        pathname: '/**',
+      },
       // Local development
       {
         protocol: 'http',

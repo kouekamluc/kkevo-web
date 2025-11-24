@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from .rss_feed import BlogPostFeed
 
 router = DefaultRouter()
 router.register(r'categories', views.BlogCategoryViewSet, basename='blogcategory')
@@ -17,4 +18,6 @@ router.register(r'analytics', views.BlogPostAnalyticsViewSet, basename='blogpost
 urlpatterns = [
     path('', include(router.urls)),
     path('upload-image/', views.ImageUploadView.as_view(), name='upload_image'),
+    path('health/', views.BlogHealthCheckView.as_view(), name='blog_health'),
+    path('rss/', BlogPostFeed(), name='blog_rss'),
 ]

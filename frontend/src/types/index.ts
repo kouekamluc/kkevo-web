@@ -84,8 +84,10 @@ export interface BlogPost {
   title: string;
   slug: string;
   excerpt: string;
+  summary?: string;
   body: string;
   featured_image?: string;
+  hero_image?: string;
   featured_image_url?: string;
   author: {
     id: string;
@@ -99,8 +101,12 @@ export interface BlogPost {
     name: string;
     slug: string;
     color: string;
+    description: string;
+    order: number;
+    is_active: boolean;
   } | null;
-  status: 'draft' | 'published' | 'archived';
+  category_name?: string; // Backward compatibility
+  status: 'draft' | 'published' | 'archived' | 'scheduled';
   published_at: string;
   is_featured: boolean;
   order: number;
@@ -115,6 +121,14 @@ export interface BlogPost {
   comment_count: number;
   meta_title?: string;
   meta_description?: string;
+  difficulty_level?: string;
+  canonical_url?: string;
+  related_services?: string;
+  long_description?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
+  reading_time?: number; // Alias for estimated_reading_time
 }
 
 export interface ContactSubmission {
@@ -442,4 +456,112 @@ export interface ResourceView {
   user_agent: string;
   referrer: string;
   viewed_at: string;
+}
+
+// Blog-related types
+export interface BlogTag {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  created_at: string;
+}
+
+export interface BlogComment {
+  id: number;
+  post: string;
+  user: {
+    id: string;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  } | null;
+  parent: number | null;
+  content: string;
+  is_approved: boolean;
+  created_at: string;
+  updated_at: string;
+  reply_count: number;
+  is_reply: boolean;
+  replies: BlogComment[];
+}
+
+export interface BlogUserActivity {
+  recent_comments: BlogComment[];
+  recent_likes: BlogPostLike[];
+  recent_bookmarks: BlogPostBookmark[];
+}
+
+export interface BlogDashboard {
+  reading_progress: UserReadingProgress[];
+  liked_posts_count: number;
+  bookmarked_posts_count: number;
+  recently_read: BlogPost[];
+}
+
+export interface UserReadingProgress {
+  id: number;
+  user: string;
+  post: string;
+  progress_percentage: number;
+  time_spent: number;
+  last_position: number;
+  is_completed: boolean;
+  completed_at: string | null;
+  last_read_at: string;
+}
+
+export interface BlogPostLike {
+  id: number;
+  post: string;
+  user?: string;
+  ip_address?: string;
+  liked_at: string;
+}
+
+export interface BlogPostBookmark {
+  id: number;
+  post: string;
+  user?: string;
+  ip_address?: string;
+  bookmarked_at: string;
+}
+
+export interface BlogPostShare {
+  id: number;
+  post: string;
+  user?: string;
+  ip_address?: string;
+  platform: string;
+  shared_at: string;
+}
+
+export interface BlogPostView {
+  id: number;
+  post: string;
+  user?: string;
+  ip_address?: string;
+  user_agent: string;
+  referrer: string;
+  viewed_at: string;
+}
+
+export interface BlogPostAnalytics {
+  id: number;
+  post: string;
+  unique_views: number;
+  returning_visitors: number;
+  bounce_rate: number;
+  average_time_on_page: number;
+  average_scroll_depth: number;
+  completion_rate: number;
+  social_shares: Record<string, number>;
+  social_clicks: Record<string, number>;
+  search_impressions: number;
+  search_clicks: number;
+  ctr: number;
+  lead_generations: number;
+  newsletter_signups: number;
+  updated_at: string;
 }

@@ -44,7 +44,7 @@ class BlogPost(models.Model):
     ]
     
     # Core fields that exist in database
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4)
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     summary = models.TextField(blank=True)  # Database has this
@@ -155,6 +155,7 @@ class BlogPost(models.Model):
 
 class BlogPostView(models.Model):
     post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='blog_views')
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     referrer = models.CharField(max_length=200, blank=True)
@@ -170,28 +171,44 @@ class BlogPostView(models.Model):
 
 class BlogPostLike(models.Model):
     post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='blog_likes',
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     liked_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-liked_at']
         verbose_name_plural = 'Blog Post Likes'
+        unique_together = [['post', 'user']]
     
     def __str__(self):
-        return f"{self.post.title} - {self.liked_at}"
+        return f"{self.user.username} liked {self.post.title} - {self.liked_at}"
 
 
 class BlogPostBookmark(models.Model):
     post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='bookmarks')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='blog_bookmarks',
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     bookmarked_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-bookmarked_at']
         verbose_name_plural = 'Blog Post Bookmarks'
+        unique_together = [['post', 'user']]
     
     def __str__(self):
-        return f"{self.post.title} - {self.bookmarked_at}"
+        return f"{self.user.username} bookmarked {self.post.title} - {self.bookmarked_at}"
 
 
 class BlogPostShare(models.Model):
@@ -205,6 +222,13 @@ class BlogPostShare(models.Model):
     ]
     
     post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='shares')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='blog_shares',
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     platform = models.CharField(max_length=20, choices=SHARE_PLATFORMS)
     shared_at = models.DateTimeField(auto_now_add=True)
@@ -214,7 +238,7 @@ class BlogPostShare(models.Model):
         verbose_name_plural = 'Blog Post Shares'
     
     def __str__(self):
-        return f"{self.post.title} - {self.platform} - {self.shared_at}"
+        return f"{self.user.username} shared {self.post.title} on {self.platform} - {self.shared_at}"
 
 
 class BlogTag(models.Model):

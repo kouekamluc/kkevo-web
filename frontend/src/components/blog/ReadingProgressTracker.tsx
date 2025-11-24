@@ -59,10 +59,15 @@ const ReadingProgressTracker: React.FC<ReadingProgressTrackerProps> = ({
 
   // Save progress to backend
   const saveProgress = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
-    
+    // Only save progress if user is authenticated
+    if (!isAuthenticated || !user) {
+      console.warn('Authentication required for reading progress tracking');
+      return;
+    }
+
     try {
-      await blogApi.updateReadingProgress(postId, {
+      await blogApi.updateReadingProgress({
+        post: postId,
         progress_percentage: progress,
         time_spent: timeSpent,
         last_position: progress,
@@ -70,28 +75,35 @@ const ReadingProgressTracker: React.FC<ReadingProgressTrackerProps> = ({
       });
       
       setLastSaveTime(Date.now());
-    } catch (error) {
+      console.log('Reading progress saved successfully');
+    } catch (error: any) {
       console.error('Error saving reading progress:', error);
-      // Don't show error toast for progress saves to avoid spam
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        console.warn('Authentication required for reading progress tracking');
+      }
     }
-  }, [isAuthenticated, user, postId, progress, timeSpent, isCompleted]);
+  }, [postId, progress, timeSpent, isCompleted, isAuthenticated, user]);
 
   // Start tracking reading progress
   const startTracking = useCallback(() => {
-    if (!isAuthenticated) return;
-    
+    // Only start tracking if user is authenticated
+    if (!isAuthenticated || !user) {
+      console.warn('Authentication required for reading progress tracking');
+      return;
+    }
+
     setIsTracking(true);
     startTimeRef.current = Date.now();
     
     // Update progress every 500ms
     progressUpdateIntervalRef.current = setInterval(updateProgress, 500);
     
-    // Save progress every 30 seconds
+    // Save progress every 30 seconds (only for authenticated users)
     saveIntervalRef.current = setInterval(saveProgress, 30000);
     
     // Initial save
     saveProgress();
-  }, [isAuthenticated, updateProgress, saveProgress]);
+  }, [updateProgress, saveProgress, isAuthenticated, user]);
 
   // Stop tracking reading progress
   const stopTracking = useCallback(() => {
@@ -158,7 +170,9 @@ const ReadingProgressTracker: React.FC<ReadingProgressTrackerProps> = ({
     
     return () => {
       // Cleanup
-      stopTracking();
+      if (isAuthenticated) {
+        stopTracking();
+      }
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);

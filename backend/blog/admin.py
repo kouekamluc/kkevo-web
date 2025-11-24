@@ -165,14 +165,14 @@ class BlogPostViewAdmin(admin.ModelAdmin):
 class BlogPostLikeAdmin(admin.ModelAdmin):
     """Admin configuration for BlogPostLike model."""
     
-    list_display = ['post', 'ip_address', 'liked_at']
-    list_filter = ['liked_at', 'post']
-    search_fields = ['post__title', 'ip_address']
+    list_display = ['post', 'user', 'ip_address', 'liked_at']
+    list_filter = ['liked_at', 'post', 'user']
+    search_fields = ['post__title', 'user__username', 'ip_address']
     readonly_fields = ['liked_at']
     
     fieldsets = (
         ('Like Information', {
-            'fields': ('post', 'ip_address')
+            'fields': ('post', 'user', 'ip_address')
         }),
         ('Timestamps', {
             'fields': ('liked_at',),
@@ -185,14 +185,14 @@ class BlogPostLikeAdmin(admin.ModelAdmin):
 class BlogPostBookmarkAdmin(admin.ModelAdmin):
     """Admin configuration for BlogPostBookmark model."""
     
-    list_display = ['post', 'ip_address', 'bookmarked_at']
-    list_filter = ['bookmarked_at', 'post']
-    search_fields = ['post__title', 'ip_address']
+    list_display = ['post', 'user', 'ip_address', 'bookmarked_at']
+    list_filter = ['bookmarked_at', 'post', 'user']
+    search_fields = ['post__title', 'user__username', 'ip_address']
     readonly_fields = ['bookmarked_at']
     
     fieldsets = (
         ('Bookmark Information', {
-            'fields': ('post', 'ip_address')
+            'fields': ('post', 'user', 'ip_address')
         }),
         ('Timestamps', {
             'fields': ('bookmarked_at',),
@@ -205,14 +205,14 @@ class BlogPostBookmarkAdmin(admin.ModelAdmin):
 class BlogPostShareAdmin(admin.ModelAdmin):
     """Admin configuration for BlogPostShare model."""
     
-    list_display = ['post', 'platform', 'ip_address', 'shared_at']
-    list_filter = ['platform', 'shared_at', 'post']
-    search_fields = ['post__title', 'ip_address', 'platform']
+    list_display = ['post', 'user', 'platform', 'ip_address', 'shared_at']
+    list_filter = ['platform', 'shared_at', 'post', 'user']
+    search_fields = ['post__title', 'user__username', 'ip_address', 'platform']
     readonly_fields = ['shared_at']
     
     fieldsets = (
         ('Share Information', {
-            'fields': ('post', 'platform', 'ip_address')
+            'fields': ('post', 'user', 'platform', 'ip_address')
         }),
         ('Timestamps', {
             'fields': ('shared_at',),

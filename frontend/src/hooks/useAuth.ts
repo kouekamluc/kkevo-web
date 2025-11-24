@@ -204,6 +204,17 @@ Contact your administrator for Auth0 account setup.`;
     }
   };
 
+  // Expose Auth0 data to window for API client access
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isAuth0Configured) {
+      (window as any).__auth0Data = {
+        isAuthenticated,
+        getAccessTokenSilently,
+        user
+      };
+    }
+  }, [isAuthenticated, getAccessTokenSilently, user, isAuth0Configured]);
+
   return {
     isAuthenticated,
     isLoading,

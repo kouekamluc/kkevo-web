@@ -23,15 +23,17 @@ class SimpleAuth0Authentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         """
         Authenticate the request and return a two-tuple of (user, token).
+        Returns None for anonymous users to allow public access.
         """
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
-        if not auth_header.startswith('Bearer '):
+        # If no authorization header, allow anonymous access
+        if not auth_header or not auth_header.startswith('Bearer '):
             return None
             
-        token = auth_header.split(' ')[1]
-        
         try:
+            token = auth_header.split(' ')[1]
+            
             # Decode the JWT token
             payload = self.decode_jwt(token)
             
@@ -41,7 +43,10 @@ class SimpleAuth0Authentication(authentication.BaseAuthentication):
             return (user, token)
             
         except Exception as e:
-            raise AuthenticationFailed(f'Invalid token: {str(e)}')
+            # For invalid tokens, return None to allow anonymous access
+            # This prevents 403 errors for public endpoints
+            print(f"Auth0 authentication failed: {str(e)}")
+            return None
     
     def decode_jwt(self, token):
         """

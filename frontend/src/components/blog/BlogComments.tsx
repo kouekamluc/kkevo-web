@@ -2,7 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, Reply, ThumbsUp, Flag, Edit, Trash2, User, Clock } from 'lucide-react';
+import { 
+  MessageCircle, 
+  Reply, 
+  ThumbsUp, 
+  Flag, 
+  Edit, 
+  Trash2, 
+  User, 
+  Clock, 
+  Send,
+  MoreVertical,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { blogApi } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -16,6 +29,7 @@ interface Comment {
     first_name?: string;
     last_name?: string;
     picture?: string;
+    email?: string;
   };
   post: string;
   parent?: number;
@@ -41,7 +55,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
   onCommentAction
 }) => {
   const { isAuthenticated, user } = useAuth();
-  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [comments, setComments] = useState<Comment[]>(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -49,25 +63,35 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
   const [editContent, setEditContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
+  const [showReplies, setShowReplies] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (initialComments.length === 0) {
+    if (!initialComments || initialComments.length === 0) {
       fetchComments();
     }
   }, [postId]);
 
   const fetchComments = async () => {
     try {
+      setIsLoading(true);
       const response = await blogApi.getComments(postId);
-      setComments(response.data);
+      setComments(response.data?.results || response.data || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
+      toast.error('Failed to load comments');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+
+    if (!isAuthenticated) {
+      toast.error('Please log in to post a comment.');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -78,13 +102,19 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
       });
 
       const comment = response.data;
-      setComments(prev => [comment, ...prev]);
+      setComments(prev => [comment, ...(prev || [])]);
       setNewComment('');
-      toast.success('Comment posted successfully!');
+      toast.success('Comment posted successfully! It will appear after moderation.');
       onCommentAction?.('create', comment.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error posting comment:', error);
-      toast.error('Failed to post comment');
+      if (error.response?.status === 403) {
+        toast.error('Please log in to post a comment.');
+      } else if (error.response?.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+      } else {
+        toast.error('Failed to post comment. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +124,11 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
     e.preventDefault();
     if (!replyContent.trim() || !replyTo) return;
 
+    if (!isAuthenticated) {
+      toast.error('Please log in to post a reply.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await blogApi.replyToComment(replyTo, {
@@ -101,24 +136,27 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
       });
 
       const reply = response.data;
-      setComments(prev => prev.map(comment => {
-        if (comment.id === replyTo) {
-          return {
-            ...comment,
-            replies: [...(comment.replies || []), reply],
-            reply_count: (comment.reply_count || 0) + 1
-          };
-        }
-        return comment;
-      }));
-
+      setComments(prev => {
+        if (!prev) return [reply];
+        return prev.map(comment => 
+          comment.id === replyTo 
+            ? { ...comment, reply_count: (comment.reply_count || 0) + 1 }
+            : comment
+        );
+      });
       setReplyContent('');
       setReplyTo(null);
       toast.success('Reply posted successfully!');
       onCommentAction?.('reply', reply.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error posting reply:', error);
-      toast.error('Failed to post reply');
+      if (error.response?.status === 403) {
+        toast.error('Please log in to post a reply.');
+      } else if (error.response?.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+      } else {
+        toast.error('Failed to post reply. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -133,20 +171,21 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
         content: editContent.trim()
       });
 
-      setComments(prev => prev.map(comment => {
-        if (comment.id === commentId) {
-          return { ...comment, content: editContent.trim(), updated_at: new Date().toISOString() };
-        }
-        return comment;
-      }));
-
+      setComments(prev => {
+        if (!prev) return [];
+        return prev.map(comment => 
+          comment.id === commentId 
+            ? { ...comment, content: editContent.trim(), updated_at: new Date().toISOString() }
+            : comment
+        );
+      });
       setEditingComment(null);
       setEditContent('');
       toast.success('Comment updated successfully!');
-      onCommentAction?.('edit', commentId);
+      onCommentAction?.('update', commentId);
     } catch (error) {
       console.error('Error updating comment:', error);
-      toast.error('Failed to update comment');
+      toast.error('Failed to update comment. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -158,238 +197,323 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
     setIsLoading(true);
     try {
       await blogApi.deleteComment(commentId);
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      setComments(prev => {
+        if (!prev) return [];
+        return prev.filter(comment => comment.id !== commentId);
+      });
       toast.success('Comment deleted successfully!');
       onCommentAction?.('delete', commentId);
     } catch (error) {
       console.error('Error deleting comment:', error);
-      toast.error('Failed to delete comment');
+      toast.error('Failed to delete comment. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLikeComment = async (commentId: number) => {
-    // This would be implemented when comment likes are added to the backend
-    toast.info('Comment likes coming soon!');
+    // TODO: Implement like functionality when backend is ready
+    toast.info('Like functionality coming soon!');
   };
 
   const handleReportComment = async (commentId: number) => {
-    // This would be implemented when comment reporting is added to the backend
-    toast.info('Comment reporting coming soon!');
+    // TODO: Implement report functionality when backend is ready
+    toast.info('Report functionality coming soon!');
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) {
-      return 'Just now';
-    } else if (diffInHours < 24) {
-      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    }
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    
+    return date.toLocaleDateString();
   };
 
   const sortComments = (comments: Comment[]) => {
+    if (!comments || !Array.isArray(comments) || comments.length === 0) return [];
+    
+    const sorted = [...comments];
     switch (sortBy) {
       case 'oldest':
-        return [...comments].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       case 'popular':
-        return [...comments].sort((a, b) => (b.reply_count || 0) - (a.reply_count || 0));
+        return sorted.sort((a, b) => (b.reply_count || 0) - (a.reply_count || 0));
       default:
-        return [...comments].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
   };
 
-  const renderComment = (comment: Comment, isReply = false) => (
-    <motion.div
-      key={comment.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={`bg-white rounded-lg border border-gray-200 p-4 ${isReply ? 'ml-8 border-l-2 border-blue-200' : ''}`}
-    >
-      <div className="flex items-start space-x-3">
-        <div className="flex-shrink-0">
-          {comment.user.picture ? (
-            <img
-              src={comment.user.picture}
-              alt={comment.user.username}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
-            </div>
-          )}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="font-medium text-gray-900">
-              {comment.user.first_name || comment.user.username}
-            </span>
-            <span className="text-sm text-gray-500">
-              {formatDate(comment.created_at)}
-            </span>
-            {comment.updated_at !== comment.created_at && (
-              <span className="text-xs text-gray-400">(edited)</span>
-            )}
-          </div>
-          
-          {editingComment === comment.id ? (
-            <div className="mb-3">
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-                placeholder="Edit your comment..."
-              />
-              <div className="flex items-center space-x-2 mt-2">
-                <button
-                  onClick={() => handleEditComment(comment.id)}
-                  disabled={isLoading}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingComment(null);
-                    setEditContent('');
-                  }}
-                  className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-700 mb-3 whitespace-pre-wrap">{comment.content}</p>
-          )}
-          
-          <div className="flex items-center space-x-4 text-sm">
-            {!isReply && (
-              <button
-                onClick={() => setReplyTo(comment.id)}
-                className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors"
-              >
-                <Reply className="w-4 h-4" />
-                <span>Reply</span>
-              </button>
-            )}
-            
-            <button
-              onClick={() => handleLikeComment(comment.id)}
-              className="flex items-center space-x-1 text-gray-500 hover:text-green-600 transition-colors"
-            >
-              <ThumbsUp className="w-4 h-4" />
-              <span>Like</span>
-            </button>
-            
-            <button
-              onClick={() => handleReportComment(comment.id)}
-              className="flex items-center space-x-1 text-gray-500 hover:text-red-600 transition-colors"
-            >
-              <Flag className="w-4 h-4" />
-              <span>Report</span>
-            </button>
-            
-            {(user?.id === comment.user.id || user?.isAdmin) && (
-              <>
-                <button
-                  onClick={() => {
-                    setEditingComment(comment.id);
-                    setEditContent(comment.content);
-                  }}
-                  className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
-                
-                <button
-                  onClick={() => handleDeleteComment(comment.id)}
-                  className="flex items-center space-x-1 text-gray-500 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete</span>
-                </button>
-              </>
-            )}
-          </div>
-          
-          {replyTo === comment.id && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200"
-            >
-              <form onSubmit={handleSubmitReply}>
-                <textarea
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Write your reply..."
-                  required
+  const toggleReplies = (commentId: number) => {
+    setShowReplies(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
+      }
+      return newSet;
+    });
+  };
+
+  const renderComment = (comment: Comment, isReply = false) => {
+    const isOwner = isAuthenticated && user && comment.user.id === user.id;
+    const hasReplies = comment.reply_count > 0;
+    const showRepliesForThis = showReplies.has(comment.id);
+
+    return (
+      <motion.div
+        key={comment.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 ${
+          isReply ? 'ml-8 border-l-4 border-l-blue-200' : ''
+        }`}
+      >
+        <div className="p-6">
+          <div className="flex items-start space-x-4">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              {comment.user.picture ? (
+                <img
+                  src={comment.user.picture}
+                  alt={comment.user.username}
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
                 />
-                <div className="flex items-center space-x-2 mt-2">
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+              )}
+            </div>
+            
+            {/* Comment Content */}
+            <div className="flex-1 min-w-0">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <h4 className="font-semibold text-gray-900">
+                    {comment.user.first_name || comment.user.username}
+                  </h4>
+                  <span className="text-sm text-gray-500 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatDate(comment.created_at)}
+                  </span>
+                  {comment.updated_at !== comment.created_at && (
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                      edited
+                    </span>
+                  )}
+                  {comment.is_approved && (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  )}
+                </div>
+                
+                {/* Actions Menu */}
+                <div className="flex items-center space-x-2">
+                  {isOwner && (
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => {
+                          setEditingComment(comment.id);
+                          setEditContent(comment.content);
+                        }}
+                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                        title="Edit comment"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                        title="Delete comment"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                   <button
-                    type="submit"
-                    disabled={isLoading || !replyContent.trim()}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    onClick={() => handleReportComment(comment.id)}
+                    className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                    title="Report comment"
                   >
-                    Reply
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReplyTo(null);
-                      setReplyContent('');
-                    }}
-                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
+                    <Flag className="w-4 h-4" />
                   </button>
                 </div>
-              </form>
-            </motion.div>
-          )}
-          
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-3">
+              </div>
+              
+              {/* Comment Text */}
+              {editingComment === comment.id ? (
+                <div className="mb-4">
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={3}
+                    placeholder="Edit your comment..."
+                  />
+                  <div className="flex items-center space-x-2 mt-2">
+                    <button
+                      onClick={() => handleEditComment(comment.id)}
+                      disabled={isLoading}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-1"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Save</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingComment(null);
+                        setEditContent('');
+                      }}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-700 mb-4 whitespace-pre-wrap leading-relaxed">
+                  {comment.content}
+                </p>
+              )}
+              
+              {/* Actions */}
+              <div className="flex items-center space-x-6 text-sm">
+                {!isReply && (
+                  <button
+                    onClick={() => setReplyTo(comment.id)}
+                    className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors font-medium"
+                  >
+                    <Reply className="w-4 h-4" />
+                    <span>Reply</span>
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => handleLikeComment(comment.id)}
+                  className="flex items-center space-x-2 text-gray-500 hover:text-green-600 transition-colors font-medium"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>Like</span>
+                </button>
+                
+                {hasReplies && !isReply && (
+                  <button
+                    onClick={() => toggleReplies(comment.id)}
+                    className="flex items-center space-x-2 text-gray-500 hover:text-purple-600 transition-colors font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>
+                      {showRepliesForThis ? 'Hide' : 'Show'} {comment.reply_count} {comment.reply_count === 1 ? 'reply' : 'replies'}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Reply Form */}
+        {replyTo === comment.id && (
+          <div className="px-6 pb-6 border-t border-gray-100">
+            <form onSubmit={handleSubmitReply} className="mt-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  {user?.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.username || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={3}
+                    placeholder={`Reply to ${comment.user.first_name || comment.user.username}...`}
+                    required
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-gray-500">
+                      Replying as {user?.first_name || user?.username}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyTo(null);
+                          setReplyContent('');
+                        }}
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isLoading || !replyContent.trim()}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-1"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>Reply</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+        
+        {/* Replies */}
+        {hasReplies && showRepliesForThis && comment.replies && (
+          <div className="border-t border-gray-100 bg-gray-50">
+            <div className="p-6 space-y-4">
               {comment.replies.map(reply => renderComment(reply, true))}
             </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
-          <MessageCircle className="w-6 h-6" />
-          <span>Comments ({comments.length})</span>
-        </h3>
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <MessageCircle className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              Comments
+            </h3>
+            <p className="text-gray-600">
+              {comments?.length || 0} {comments?.length === 1 ? 'comment' : 'comments'}
+            </p>
+          </div>
+        </div>
         
-        <div className="flex items-center space-x-2">
-          <label className="text-sm text-gray-600">Sort by:</label>
+        <div className="flex items-center space-x-3">
+          <label className="text-sm font-medium text-gray-700">Sort by:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'popular')}
-            className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -398,76 +522,108 @@ const BlogComments: React.FC<BlogCommentsProps> = ({
         </div>
       </div>
       
+      {/* Comment Form */}
       {isAuthenticated ? (
-        <form onSubmit={handleSubmitComment} className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              {user?.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.username || 'User'}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl border border-gray-100 shadow-sm"
+        >
+          <div className="p-6">
+            <form onSubmit={handleSubmitComment}>
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  {user?.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.username || 'User'}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            <div className="flex-1">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows={4}
-                placeholder="Write a comment..."
-                required
-              />
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-gray-500">
-                  Comments are moderated and will appear after approval.
-                </p>
-                <button
-                  type="submit"
-                  disabled={isLoading || !newComment.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  {isLoading ? 'Posting...' : 'Post Comment'}
-                </button>
+                
+                <div className="flex-1">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={4}
+                    placeholder="Share your thoughts on this article..."
+                    required
+                  />
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Comments are moderated and will appear after approval.</span>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isLoading || !newComment.trim()}
+                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>{isLoading ? 'Posting...' : 'Post Comment'}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
-        </form>
+        </motion.div>
       ) : (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 text-center">
-          <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h4 className="text-lg font-medium text-gray-900 mb-2">Join the conversation</h4>
-          <p className="text-gray-600 mb-4">
-            Please log in to leave a comment and engage with other readers.
-          </p>
-          <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors">
-            Log In to Comment
-          </button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200 p-8 text-center"
+        >
+          <div className="max-w-md mx-auto">
+            <div className="p-3 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <MessageCircle className="w-8 h-8 text-blue-600" />
+            </div>
+            <h4 className="text-xl font-semibold text-gray-900 mb-2">Join the conversation</h4>
+            <p className="text-gray-600 mb-6">
+              Share your thoughts and engage with other readers. Your insights make our community stronger.
+            </p>
+            <button className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              Sign In to Comment
+            </button>
+          </div>
+        </motion.div>
       )}
       
-      <div className="space-y-4">
+      {/* Comments List */}
+      <div className="space-y-6">
         <AnimatePresence>
-          {sortComments(comments).map(comment => renderComment(comment))}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-gray-500">Loading comments...</p>
+            </div>
+          ) : comments && Array.isArray(comments) && comments.length > 0 ? (
+            sortComments(comments).map(comment => renderComment(comment))
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12"
+            >
+              <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <MessageCircle className="w-10 h-10 text-gray-400" />
+              </div>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">No comments yet</h4>
+              <p className="text-gray-500">
+                Be the first to share your thoughts on this article!
+              </p>
+            </motion.div>
+          )}
         </AnimatePresence>
-        
-        {comments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p>No comments yet. Be the first to share your thoughts!</p>
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
 export default BlogComments;
-
-

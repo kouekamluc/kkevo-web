@@ -1,0 +1,8 @@
+[
+  {
+    "test": "Authentication",
+    "success": false,
+    "message": "Exception: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001F04D02B4D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))",
+    "timestamp": "2025-09-01T22:25:23.676026"
+  }
+]

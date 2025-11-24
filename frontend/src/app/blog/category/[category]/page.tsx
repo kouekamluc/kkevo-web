@@ -181,6 +181,7 @@ export default function BlogCategoryPage({ params }: BlogCategoryPageProps) {
                                 src={post.featured_image || `/api/placeholder/400/200`}
                                 alt={post.title}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>

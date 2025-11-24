@@ -40,7 +40,7 @@ urlpatterns = [
     path('services/', ServiceViewSet.as_view({'get': 'list'}), name='service-list'),
     path('services/<slug:slug>/', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
     
-    # Include new blog URLs
+    # Include blog URLs (temporarily using original)
     path('blog/', include('blog.urls')),
     
     # Portfolio items with slug-based lookups

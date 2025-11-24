@@ -9,45 +9,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { blogApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
+import { BlogPost } from '@/types';
+
 interface BlogPostCardProps {
-  post: {
-    id: string;
-    title: string;
-    slug: string;
-    excerpt: string;
-    summary: string;
-    featured_image?: string;
-    hero_image?: string;
-    author: {
-      id: string;
-      username: string;
-      first_name?: string;
-      last_name?: string;
-      picture?: string;
-    };
-    category: {
-      id: string;
-      name: string;
-      slug: string;
-      color: string;
-      icon: string;
-    };
-    tags: Array<{
-      id: string;
-      name: string;
-      slug: string;
-      color: string;
-    }>;
-    status: string;
-    published_at: string;
-    view_count: number;
-    like_count: number;
-    bookmark_count: number;
-    comment_count: number;
-    difficulty_level: string;
-    estimated_reading_time: number;
-    is_featured: boolean;
-  };
+  post: BlogPost;
   variant?: 'default' | 'featured' | 'compact';
   showActions?: boolean;
   onAction?: (action: string, postId: string) => void;
@@ -74,7 +39,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
       setIsLiked(false);
       setIsBookmarked(false);
     }
-  }, [isAuthenticated, user, post.id]);
+  }, [isAuthenticated, user, post.slug]);
 
   const handleLike = async () => {
     if (!isAuthenticated) {
@@ -84,17 +49,17 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
 
     setIsLoading(true);
     try {
-      const response = await blogApi.like(post.id);
-      setIsLiked(response.data.liked);
+      const response = await blogApi.like(post.slug, isLiked ? 'unlike' : 'like');
+      setIsLiked(!isLiked);
       setLikeCount(response.data.like_count);
       
-      if (response.data.liked) {
+      if (!isLiked) {
         toast.success('Post liked!');
       } else {
         toast.success('Post unliked');
       }
       
-      onAction?.('like', post.id);
+      onAction?.('like', post.slug);
     } catch (error) {
       console.error('Error liking post:', error);
       toast.error('Failed to like post');
@@ -111,17 +76,17 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
 
     setIsLoading(true);
     try {
-      const response = await blogApi.bookmark(post.id);
-      setIsBookmarked(response.data.bookmarked);
+      const response = await blogApi.bookmark(post.slug, isBookmarked ? 'unbookmark' : 'bookmark');
+      setIsBookmarked(!isBookmarked);
       setBookmarkCount(response.data.bookmark_count);
       
-      if (response.data.bookmarked) {
+      if (!isBookmarked) {
         toast.success('Post bookmarked!');
       } else {
         toast.success('Bookmark removed');
       }
       
-      onAction?.('bookmark', post.id);
+      onAction?.('bookmark', post.slug);
     } catch (error) {
       console.error('Error bookmarking post:', error);
       toast.error('Failed to bookmark post');
@@ -132,7 +97,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
 
   const handleShare = async (platform: string) => {
     try {
-      await blogApi.share(post.id, {
+      await blogApi.share(post.slug, {
         share_type: 'social',
         platform
       });
@@ -157,7 +122,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
           toast.success('Link copied to clipboard!');
       }
       
-      onAction?.('share', post.id);
+      onAction?.('share', post.slug);
     } catch (error) {
       console.error('Error sharing post:', error);
       toast.error('Failed to share post');
@@ -198,7 +163,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
     }
   };
 
-  const imageUrl = post.hero_image || post.featured_image || '/images/blog-placeholder.jpg';
+  const imageUrl = post.hero_image || post.featured_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQ1MCIgdmlld0JveD0iMCAwIDgwMCA0NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNDUwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zNTAgMjAwSDQ1MFYyNTBIMzUwVjIwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHRleHQgeD0iNDAwIiB5PSIzMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzZCNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QmxvZyBJbWFnZTwvdGV4dD4KPC9zdmc+';
 
   if (variant === 'compact') {
     return (
@@ -249,6 +214,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
                 src={imageUrl}
                 alt={post.title}
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover"
               />
               {post.is_featured && (
@@ -261,15 +227,19 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
           
           <div className="p-6">
             <div className="flex items-center space-x-2 mb-3">
-              <span
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                style={{ backgroundColor: post.category.color + '20', color: post.category.color }}
-              >
-                {post.category.icon} {post.category.name}
-              </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(post.difficulty_level)}`}>
-                {getDifficultyText(post.difficulty_level)}
-              </span>
+              {post.category && (
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  style={{ backgroundColor: post.category.color + '20', color: post.category.color }}
+                >
+                  {post.category.name}
+                </span>
+              )}
+              {post.difficulty_level && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(post.difficulty_level)}`}>
+                  {getDifficultyText(post.difficulty_level)}
+                </span>
+              )}
             </div>
             
             <Link href={`/blog/${post.slug}`}>
@@ -286,7 +256,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
               <div className="flex items-center space-x-4 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <User className="w-4 h-4" />
-                  <span>{post.author.first_name || post.author.username}</span>
+                  <span>{post.author.name}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
@@ -386,6 +356,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
               src={imageUrl}
               alt={post.title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
             />
             {post.is_featured && (
@@ -398,15 +369,19 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
         
         <div className="p-4">
           <div className="flex items-center space-x-2 mb-2">
-            <span
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-              style={{ backgroundColor: post.category.color + '20', color: post.category.color }}
-            >
-              {post.category.icon} {post.category.name}
-            </span>
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(post.difficulty_level)}`}>
-              {getDifficultyText(post.difficulty_level)}
-            </span>
+            {post.category && (
+              <span
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                style={{ backgroundColor: post.category.color + '20', color: post.category.color }}
+              >
+                {post.category.name}
+              </span>
+            )}
+            {post.difficulty_level && (
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(post.difficulty_level)}`}>
+                {getDifficultyText(post.difficulty_level)}
+              </span>
+            )}
           </div>
           
           <Link href={`/blog/${post.slug}`}>
@@ -421,13 +396,13 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
           
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
-              {post.tags.slice(0, 3).map((tag) => (
+              {post.tags.slice(0, 3).map((tag, index) => (
                 <span
-                  key={tag.id}
+                  key={index}
                   className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
                 >
                   <Tag className="w-3 h-3 mr-1" />
-                  {tag.name}
+                  {tag}
                 </span>
               ))}
               {post.tags.length > 3 && (
